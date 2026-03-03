@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Personal Coach | Aura</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="aura-bg"></div>
+
+    <!-- Onboarding Overlay -->
+    <div id="onboarding-overlay" class="onboarding-overlay active">
+        <div class="onboarding-container">
+            <!-- Step 1: Activation -->
+            <div class="onboarding-step active" data-step="1">
+                <div class="glass-card aura-center">
+                    <div class="logo large">IA</div>
+                    <h1>Ativação Digital</h1>
+                    <p>Sincronizando com o método IA Personal Coach.</p>
+                    <button class="aura-btn" onclick="nextStep()">Começar Diagnóstico</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Biometrics & Health -->
+            <div class="onboarding-step" data-step="2">
+                <div class="glass-card">
+                    <h2>Diagnóstico de Saúde</h2>
+                    <div class="input-group">
+                        <label>Como prefere ser chamado?</label>
+                        <input type="text" id="pref-name" placeholder="Ex: Rubens">
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Idade</label>
+                            <input type="number" id="age">
+                        </div>
+                        <div class="input-group">
+                            <label>Peso (kg)</label>
+                            <input type="number" id="weight">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Alguma lesão ou limitação?</label>
+                        <textarea id="injuries" placeholder="Descreva aqui..."></textarea>
+                    </div>
+                    <button class="aura-btn" onclick="nextStep()">Continuar</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Logistics -->
+            <div class="onboarding-step" data-step="3">
+                <div class="glass-card">
+                    <h2>Logística & Arsenal</h2>
+                    <label>Onde você treina?</label>
+                    <div class="option-grid">
+                        <div class="option-card" onclick="selectOption(this, 'location')">🏠 Casa</div>
+                        <div class="option-card" onclick="selectOption(this, 'location')">🏋️ Academia</div>
+                        <div class="option-card" onclick="selectOption(this, 'location')">🌳 Livre</div>
+                    </div>
+                    <div class="input-group">
+                        <label>Equipamentos disponíveis</label>
+                        <div class="check-list">
+                            <label><input type="checkbox"> Halteres</label>
+                            <label><input type="checkbox"> Elásticos</label>
+                            <label><input type="checkbox"> Kettlebell</label>
+                        </div>
+                    </div>
+                    <button class="aura-btn" onclick="nextStep()">Configurar IA</button>
+                </div>
+            </div>
+
+            <!-- Step 4: AI Persona -->
+            <div class="onboarding-step" data-step="4">
+                <div class="glass-card">
+                    <h2>Voz do Master Coach</h2>
+                    <p>Como você prefere ser tratado?</p>
+                    <div class="option-grid">
+                        <div class="option-card" onclick="selectOption(this, 'persona')">Direto & Objetivo</div>
+                        <div class="option-card" onclick="selectOption(this, 'persona')">Amigo Motivador</div>
+                        <div class="option-card" onclick="selectOption(this, 'persona')">Técnico Detalhado</div>
+                    </div>
+                    <div class="input-group">
+                        <label>Uma frase para te incentivar:</label>
+                        <input type="text" id="incentive" placeholder="Ex: Sem desculpas.">
+                    </div>
+                    <button class="aura-btn" onclick="nextStep()">Firmar Contrato</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Contract -->
+            <div class="onboarding-step" data-step="5">
+                <div class="glass-card aura-center">
+                    <h2>Contrato de Performance</h2>
+                    <p>Eu comprometo minha disciplina para alcançar clareza e resultados.</p>
+                    <div class="signature-pad" id="signature">
+                        <span>Assine aqui com o dedo</span>
+                    </div>
+                    <button class="aura-btn" onclick="finishOnboarding()">Sincronizar E-sistema</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        <div class="logo">IA</div>
+        <div class="user-profile">
+            <span>Olá, <strong>Rubens</strong></span>
+            <div class="avatar"></div>
+        </div>
+    </nav>
+
+    <main class="app-container">
+        <!-- Dashboard Fold -->
+        <section class="dashboard">
+            <div class="glass-card discipline-card">
+                <h3>Discipline Score</h3>
+                <div class="score-circle">
+                    <svg viewBox="0 0 36 36" class="circular-chart silver">
+                        <path class="circle-bg"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" stroke-dasharray="85, 100"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="percentage">85</div>
+                </div>
+                <p>Status: <span class="badge">Elite</span></p>
+            </div>
+
+            <div class="glass-card next-workout">
+                <div class="card-header">
+                    <span>Treino de Hoje</span>
+                    <span class="tag">65min</span>
+                </div>
+                <h2>Performance & Power</h2>
+                <p>Foco: Membros Superiores e Core</p>
+                <button class="aura-btn">Iniciar Sessão</button>
+            </div>
+        </section>
+
+        <!-- Chat Trigger -->
+        <div class="chat-bubble" id="ai-trigger">
+            <span class="ai-status">IA Coach Online</span>
+            <div class="bubble-icon">✨</div>
+        </div>
+    </main>
+
+    <!-- Chat Overlay (Hidden by default) -->
+    <div class="chat-overlay" id="chat-overlay">
+        <div class="chat-window glass-card">
+            <div class="chat-header">
+                <h3>Master Coach IA</h3>
+                <button id="close-chat">×</button>
+            </div>
+            <div class="chat-content" id="chat-messages">
+                <div class="msg ai">Olá, Rubens. Vi que seu sono foi excelente ontem (8h). Pronto para bater seu recorde
+                    hoje?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" placeholder="Pergunte ao seu Coach...">
+                <button>Sincronizar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

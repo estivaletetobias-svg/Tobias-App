@@ -166,6 +166,57 @@
         </div>
     </div>
 
+    <!-- Workout Execution Overlay -->
+    <div class="workout-overlay" id="workout-overlay">
+        <div class="workout-container glass-card">
+            <div class="workout-header">
+                <span class="exercise-count">Exercício 1 de 6</span>
+                <button id="close-workout" class="close-btn">Sair</button>
+            </div>
+
+            <div class="exercise-visual">
+                <div class="video-placeholder">
+                    <span>🎬 Loop de Execução</span>
+                </div>
+            </div>
+
+            <div class="exercise-info">
+                <h2 id="ex-name">Supino Reto</h2>
+                <p id="ex-desc">Foco em peitoral maior. Mantenha as escápulas retraídas.</p>
+            </div>
+
+            <div class="workout-stats">
+                <div class="stat-item">
+                    <span class="label">Séries</span>
+                    <span class="value">4</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Reps</span>
+                    <span class="value">10-12</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Carga</span>
+                    <span class="value">-- kg</span>
+                </div>
+            </div>
+
+            <div class="timer-section">
+                <div class="timer-display" id="timer">00:45</div>
+                <button class="timer-btn" id="start-rest">Iniciar Descanso</button>
+            </div>
+
+            <div class="workout-actions">
+                <button class="aura-btn secondary" id="prev-ex">Anterior</button>
+                <button class="aura-btn" id="next-ex">Próximo Exercício</button>
+            </div>
+
+            <div class="quick-ai-help" id="quick-ai-trigger">
+                <span>Dúvida na execução? Pergunte à IA</span>
+                <div class="mini-bubble">✨</div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 

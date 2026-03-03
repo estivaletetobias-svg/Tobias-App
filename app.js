@@ -66,7 +66,50 @@ function finishOnboarding() {
     overlay.style.opacity = '0';
     setTimeout(() => {
         overlay.classList.remove('active');
-        // Aqui simularia o salvamento no banco de dados e ativação do Dashboard
         alert("Sincronização Completa. Bem-vindo ao seu futuro.");
     }, 500);
 }
+
+// Workout Session Management
+const startWorkoutBtn = document.querySelector('.next-workout .aura-btn');
+const workoutOverlay = document.getElementById('workout-overlay');
+const closeWorkout = document.getElementById('close-workout');
+const timerDisplay = document.getElementById('timer');
+const startRestBtn = document.getElementById('start-rest');
+
+startWorkoutBtn.addEventListener('click', () => {
+    workoutOverlay.style.display = 'block';
+});
+
+closeWorkout.addEventListener('click', () => {
+    workoutOverlay.style.display = 'none';
+});
+
+// Timer Logic
+let timerInterval;
+startRestBtn.addEventListener('click', () => {
+    let timeLeft = 45;
+    startRestBtn.disabled = true;
+    startRestBtn.textContent = "Descansando...";
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "00:45";
+            startRestBtn.disabled = false;
+            startRestBtn.textContent = "Iniciar Descanso";
+            alert("Hora da próxima série!");
+        }
+    }, 1000);
+});
+
+// Quick AI Trigger from Workout
+document.getElementById('quick-ai-trigger').addEventListener('click', () => {
+    document.getElementById('chat-overlay').style.display = 'block';
+});

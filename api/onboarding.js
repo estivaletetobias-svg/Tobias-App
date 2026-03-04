@@ -17,7 +17,12 @@ export default async function handler(req, res) {
 
     try {
         // Criar thread persistente na OpenAI
-        const thread = await openai.beta.threads.create();
+        let thread;
+        try {
+            thread = await openai.beta.threads.create();
+        } catch (openaiErr) {
+            return res.status(500).json(err(`OpenAI falhou: ${openaiErr.message}`));
+        }
 
         // Salvar perfil no Supabase
         const { error: dbError } = await supabase
@@ -33,11 +38,11 @@ export default async function handler(req, res) {
                 discipline_score: 50
             });
 
-        if (dbError) throw dbError;
+        if (dbError) return res.status(500).json(err(`Supabase: ${dbError.message}`));
 
         return res.status(200).json(ok({ thread_id: thread.id, message: 'Perfil sincronizado.' }));
     } catch (e) {
         console.error('[onboarding]', e);
-        return res.status(500).json(err('Falha ao salvar o perfil.'));
+        return res.status(500).json(err(`Erro interno: ${e.message}`));
     }
 }

@@ -533,6 +533,7 @@
                             <th>Último Treino</th>
                             <th>Onboarding</th>
                             <th>Local</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="clients-table">
@@ -736,6 +737,37 @@
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('filter-' + f).classList.add('active');
             renderTable();
+        }
+
+        async function toggleActive(userId, newState) {
+            const res = await fetch('/api/admin/dashboard', {
+                method: 'PATCH',
+                headers: { 'x-admin-secret': adminSecret, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, is_active: newState })
+            });
+            if (res.ok) {
+                const c = allClients.find(c => c.id === userId);
+                if (c) c.is_active = newState;
+                renderTable();
+            } else {
+                alert('Erro ao atualizar status.');
+            }
+        }
+
+        async function deleteUser(userId, name) {
+            if (!confirm(`Tem certeza que deseja deletar "${name}"? Esta ação não pode ser desfeita.`)) return;
+            const res = await fetch('/api/admin/dashboard', {
+                method: 'DELETE',
+                headers: { 'x-admin-secret': adminSecret, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            if (res.ok) {
+                allClients = allClients.filter(c => c.id !== userId);
+                renderTable();
+                await loadData(); // recarregar stats
+            } else {
+                alert('Erro ao deletar usuário.');
+            }
         }
     </script>
 </body>

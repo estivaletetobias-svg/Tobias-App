@@ -12,93 +12,25 @@
 <body>
     <div class="aura-bg"></div>
 
-    <!-- Onboarding Overlay -->
+    <!-- Onboarding: 1 passo — o rest o a IA faz via chat -->
     <div id="onboarding-overlay" class="onboarding-overlay active">
         <div class="onboarding-container">
-            <!-- Step 1: Activation -->
             <div class="onboarding-step active" data-step="1">
                 <div class="glass-card aura-center">
                     <div class="logo large">IA</div>
-                    <h1>Ativação Digital</h1>
-                    <p>Sincronizando com o método IA Personal Coach.</p>
-                    <button class="aura-btn" onclick="nextStep()">Começar Diagnóstico</button>
+                    <h1>Bem-vindo ao<br>IA Personal Coach</h1>
+                    <p style="margin-bottom:24px">Seu Master Coach pessoal está pronto.<br>Como você prefere ser
+                        chamado?</p>
+                    <div class="input-group" style="text-align:left;margin-bottom:20px">
+                        <label>Seu nome</label>
+                        <input type="text" id="pref-name" placeholder="Ex: Tobias" autocomplete="given-name">
+                    </div>
+                    <button class="aura-btn" onclick="startWithAI()" id="btn-start-ai">Iniciar com o Coach ✶</button>
                 </div>
-            </div>
-
-            <!-- Step 2: Biometrics & Health -->
-            <div class="onboarding-step" data-step="2">
-                <div class="glass-card">
-                    <h2>Diagnóstico de Saúde</h2>
-                    <div class="input-group">
-                        <label>Como prefere ser chamado?</label>
-                        <input type="text" id="pref-name" placeholder="Ex: Rubens">
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Idade</label>
-                            <input type="number" id="age">
-                        </div>
-                        <div class="input-group">
-                            <label>Peso (kg)</label>
-                            <input type="number" id="weight">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Alguma lesão ou limitação?</label>
-                        <textarea id="injuries" placeholder="Descreva aqui..."></textarea>
-                    </div>
-                    <button class="aura-btn" onclick="nextStep()">Continuar</button>
-                </div>
-            </div>
-
-            <!-- Step 3: Logistics -->
-            <div class="onboarding-step" data-step="3">
-                <div class="glass-card">
-                    <h2>Onde você treina?</h2>
-                    <p>O Master Coach vai personalizar seus treinos com base no ambiente.</p>
-                    <div class="option-grid">
-                        <div class="option-card" onclick="selectOption(this, 'location')">🏠 Casa</div>
-                        <div class="option-card" onclick="selectOption(this, 'location')">🏋️ Academia</div>
-                        <div class="option-card" onclick="selectOption(this, 'location')">🌳 Ar livre</div>
-                    </div>
-                    <button class="aura-btn" onclick="nextStep()" style="margin-top:24px">Configurar IA</button>
-                </div>
-            </div>
-
-            <!-- Step 4: AI Persona -->
-            <div class="onboarding-step" data-step="4">
-                <div class="glass-card">
-                    <h2>Voz do Master Coach</h2>
-                    <p>Como você prefere ser tratado?</p>
-                    <div class="option-grid">
-                        <div class="option-card" onclick="selectOption(this, 'persona')">Direto & Objetivo</div>
-                        <div class="option-card" onclick="selectOption(this, 'persona')">Amigo Motivador</div>
-                        <div class="option-card" onclick="selectOption(this, 'persona')">Técnico Detalhado</div>
-                    </div>
-                    <div class="input-group">
-                        <label>Uma frase para te incentivar:</label>
-                        <input type="text" id="incentive" placeholder="Ex: Sem desculpas.">
-                    </div>
-                    <button class="aura-btn" onclick="nextStep()">Firmar Contrato</button>
-                </div>
-            </div>
-
-            <!-- Step 5: Contract -->
-            <div class="onboarding-step" data-step="5">
-                <div class="glass-card aura-center">
-                    <h2>Contrato de Performance</h2>
-                    <p style="margin-bottom:24px">Ao continuar, você assume o compromisso com sua evolução física,
-                        mental e disciplinar.</p>
-                    <div class="commitment-block">
-                        <p class="commitment-text">"Eu me comprometo com minha disciplina para alcançar clareza e
-                            resultados duradouros."</p>
-                    </div>
-                </div>
-                <button class="aura-btn" onclick="finishOnboarding()">Sincronizar E-sistema</button>
             </div>
         </div>
     </div>
-    </div>
+
 
     <nav class="top-nav">
         <div class="logo">IA</div>

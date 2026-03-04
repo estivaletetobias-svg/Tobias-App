@@ -71,73 +71,55 @@ async function apiFetch(path, options = {}) {
     return res.json();
 }
 
-// ─── Onboarding ────────────────────────────────────────────────────────────
-let currentStep = 1;
-const totalSteps = 5;
-const onboardingData = {};
-
-window.nextStep = function () {
-    collectStepData(currentStep);
-    if (currentStep < totalSteps) {
-        document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
-        currentStep++;
-        document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+// ─── Onboarding via IA ────────────────────────────────────────────────────
+window.startWithAI = async function () {
+    const name = document.getElementById('pref-name')?.value?.trim();
+    if (!name) {
+        document.getElementById('pref-name').style.borderColor = 'red';
+        return;
     }
-};
 
-window.selectOption = function (el, group) {
-    document.querySelectorAll(`[onclick*="${group}"]`).forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    onboardingData[group] = el.textContent.trim();
-};
+    const btn = document.getElementById('btn-start-ai');
+    if (btn) { btn.disabled = true; btn.textContent = 'Conectando...'; }
 
-function collectStepData(step) {
-    if (step === 2) {
-        onboardingData.pref_name = document.getElementById('pref-name')?.value;
-        onboardingData.age = document.getElementById('age')?.value;
-        onboardingData.weight = document.getElementById('weight')?.value;
-        onboardingData.injuries = document.getElementById('injuries')?.value;
-    }
-    if (step === 3) {
-        const checked = [...document.querySelectorAll('.check-list input:checked')];
-        onboardingData.equipment_tags = checked.map(c => c.parentElement.textContent.trim());
-    }
-    if (step === 4) {
-        onboardingData.incentive_phrase = document.getElementById('incentive')?.value;
-    }
-}
-
-window.finishOnboarding = async function () {
-    collectStepData(currentStep);
-
-    const overlay = document.getElementById('onboarding-overlay');
-    overlay.style.opacity = '0.5';
-
+    // Salvar nome + criar thread OpenAI
     const result = await apiFetch('/api/onboarding', {
         method: 'POST',
-        body: JSON.stringify({
-            pref_name: onboardingData.pref_name || 'Atleta',
-            age: parseInt(onboardingData.age) || null,
-            weight: parseFloat(onboardingData.weight) || null,
-            injuries: onboardingData.injuries || '',
-            workout_location: onboardingData.location || 'academia',
-            equipment_tags: onboardingData.equipment_tags || [],
-            ai_persona_type: onboardingData.persona || 'Direto & Objetivo',
-            incentive_phrase: onboardingData.incentive_phrase || '',
-        })
+        body: JSON.stringify({ pref_name: name })
     });
 
-    overlay.style.opacity = '1';
-
-    if (result.success) {
-        overlay.classList.remove('active');
-        await loadTodayWorkout();
-        const nameEl = document.querySelector('.user-profile strong');
-        if (nameEl) nameEl.textContent = onboardingData.pref_name || 'Atleta';
-    } else {
-        alert('Erro ao salvar perfil: ' + result.error);
+    if (!result.success) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Iniciar com o Coach ✶'; }
+        alert('Erro ao conectar com o Coach: ' + result.error);
+        return;
     }
+
+    // Fechar onboarding overlay
+    document.getElementById('onboarding-overlay').classList.remove('active');
+
+    // Atualizar nome no header
+    const nameEl = document.querySelector('.user-profile strong');
+    if (nameEl) nameEl.textContent = name;
+
+    // Abrir chat e limpar mensagem genérica
+    const chatOverlay = document.getElementById('chat-overlay');
+    chatOverlay.style.display = 'block';
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.innerHTML = '';
+
+    // IA inicia o diagnóstico conversacional
+    appendMessage(
+        `Olá, ${name}! Sou seu Master Coach IA.\n\nA partir de agora, vou criar um programa 100% personalizado pra você. Para isso, quero te conhecer de verdade.\n\nMe conta: qual é o seu principal objetivo hoje? Perder gordura, ganhar massa, melhorar condicionamento… ou tem outro foco?`,
+        'ai'
+    );
 };
+
+// ─── (mantida para compatibilidade — não é mais usada no fluxo principal)
+window.finishOnboarding = async function () {
+    const pref_name = document.getElementById('pref-name')?.value || 'Atleta';
+    await startWithAI();
+};
+
 
 // ─── Treino do Dia ─────────────────────────────────────────────────────────
 async function loadTodayWorkout() {

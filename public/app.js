@@ -405,8 +405,8 @@ function initEventListeners() {
         }
     });
     document.getElementById('close-workout')?.addEventListener('click', () => {
+        // Sair sem registrar (botao Concluir e quem registra)
         document.getElementById('workout-overlay').style.display = 'none';
-        finishWorkoutSession();
     });
 
     // Workout ― navegação e pular
@@ -584,36 +584,42 @@ window.goToSkipped = function () {
 };
 
 async function finishWorkoutSession() {
-    // Fechar overlay de treino
-    document.getElementById('workout-overlay').style.display = 'none';
-
     const workoutName = document.querySelector('.next-workout h2')?.textContent || 'Treino do Dia';
-    const incentive = document.querySelector('.user-profile strong')?.textContent || 'Atleta';
 
-    // Registrar treino no banco
-    const result = await apiFetch('/api/workout', {
-        method: 'POST',
-        body: JSON.stringify({ workout_name: workoutName, perceived_effort: 7 })
-    });
+    // 1. Fechar overlay e mostrar modal IMEDIATAMENTE (antes da API)
+    document.getElementById('workout-overlay').style.display = 'none';
+    const modal = document.getElementById('workout-complete-modal');
+    const msgEl = document.getElementById('complete-msg');
+    const scoreDisplay = document.getElementById('complete-score');
+    if (modal) modal.style.display = 'flex';
+    if (msgEl) msgEl.textContent = 'Registrando seu treino...';
+    if (scoreDisplay) scoreDisplay.textContent = '';
 
-    // Atualizar score no dashboard
-    const newScore = result?.data?.discipline_score;
-    if (newScore != null) {
-        const scoreEl = document.querySelector('.percentage');
-        const circleEl = document.querySelector('.circle');
-        if (scoreEl) scoreEl.textContent = newScore;
-        if (circleEl) circleEl.setAttribute('stroke-dasharray', `${newScore}, 100`);
+    // 2. Registrar no banco em background
+    try {
+        const result = await apiFetch('/api/workout', {
+            method: 'POST',
+            body: JSON.stringify({ workout_name: workoutName, perceived_effort: 7 })
+        });
+
+        const newScore = result?.data?.discipline_score;
+
+        // Atualizar modal com resultado
+        if (msgEl) msgEl.textContent = '🔥 Excelente foco! Treino registrado.';
+        if (scoreDisplay && newScore != null) scoreDisplay.textContent = `Score: ${newScore}/100`;
+
+        // Atualizar score no dashboard
+        if (newScore != null) {
+            const scoreEl = document.querySelector('.percentage');
+            const circleEl = document.querySelector('.circle');
+            if (scoreEl) scoreEl.textContent = newScore;
+            if (circleEl) circleEl.setAttribute('stroke-dasharray', `${newScore}, 100`);
+        }
+    } catch (e) {
+        if (msgEl) msgEl.textContent = 'Treino concluído! (erro ao salvar — tente novamente)';
+        console.error('[finish]', e);
     }
 
-    // Mostrar modal de celebração
-    const modal = document.getElementById('workout-complete-modal');
-    const scoreDisplay = document.getElementById('complete-score');
-    const msgEl = document.getElementById('complete-msg');
-    if (modal) modal.style.display = 'flex';
-    if (scoreDisplay && newScore) scoreDisplay.textContent = `Score: ${newScore}/100`;
-    if (msgEl) msgEl.textContent = `Excelente foco! Treino registrado com sucesso. 🔥`;
-
-    // Resetar lista de pulados
     window.skippedIndexes = [];
 }
 

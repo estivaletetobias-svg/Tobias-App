@@ -71,7 +71,12 @@ Retorne APENAS um JSON válido com este formato exato:
     if (req.method === 'POST') {
         const { workout_name, perceived_effort } = req.body;
         try {
-            await supabase.from('workout_logs').insert({ user_id: user.id, workout_name, perceived_effort });
+            await supabase.from('workout_logs').insert({
+                user_id: user.id,
+                workout_name,
+                perceived_effort,
+                logged_at: new Date().toISOString()
+            });
 
             const { data: logs } = await supabase
                 .from('workout_logs')

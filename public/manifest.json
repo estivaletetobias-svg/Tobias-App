@@ -4,17 +4,17 @@
     "description": "Seu Personal Trainer com Inteligência Artificial by Tobias Estivalete",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#050505",
+    "background_color": "#FFFFFF",
     "theme_color": "#7c6aff",
     "icons": [
         {
-            "src": "https://oppuxdchoifqbhcyctzn.supabase.co/storage/v1/object/public/assets/icon-192.png",
+            "src": "icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "https://oppuxdchoifqbhcyctzn.supabase.co/storage/v1/object/public/assets/icon-512.png",
+            "src": "icon-512.png",
             "sizes": "512x512",
             "type": "image/png"
         }

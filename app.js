@@ -301,6 +301,42 @@ function injectStartSessionButton(msgEl) {
     msgEl.appendChild(btn);
 }
 
+// ─── Type Effect (Luxury Feel) ───────────────────────────────────────────
+async function typeEffect(element, html) {
+    element.innerHTML = '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = marked.parse(html);
+    const nodes = Array.from(tempDiv.childNodes);
+
+    for (const node of nodes) {
+        const span = document.createElement('span');
+        span.style.opacity = '0';
+        span.style.transition = 'opacity 0.5s ease';
+        element.appendChild(span);
+
+        if (node.nodeType === Node.TEXT_NODE) {
+            const words = node.textContent.split(' ');
+            for (const word of words) {
+                const wordNode = document.createTextNode(word + ' ');
+                span.appendChild(wordNode);
+                span.style.opacity = '1';
+                await new Promise(r => setTimeout(r, 40));
+                autoScrollChat(element);
+            }
+        } else {
+            span.appendChild(node.cloneNode(true));
+            span.style.opacity = '1';
+            await new Promise(r => setTimeout(r, 100));
+            autoScrollChat(element);
+        }
+    }
+}
+
+function autoScrollChat(element) {
+    const container = element.closest('.chat-content') || element;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+}
+
 async function sendChatMessage() {
     const input = document.querySelector('.chat-input-area input');
     const message = input?.value?.trim();
@@ -324,8 +360,11 @@ async function sendChatMessage() {
             return;
         }
 
-        const msgEl = appendMessage(result.data.text, 'ai');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        const msgEl = appendMessage('', 'ai shimmer'); // Add shimmer class
+        msgEl.dataset.rawText = result.data.text; // Store raw text for parsing
+        await typeEffect(msgEl, result.data.text);
+        msgEl.classList.remove('shimmer'); // Remove shimmer after typing effect
+        autoScrollChat(chatMessages);
 
         // ― 3: Detectar treino e mostrar botão de sessão
         if (detectWorkoutInMessage(result.data.text)) {
@@ -600,7 +639,7 @@ window.sendMiniAI = async function () {
 
     input.value = '';
     responseEl.style.display = 'block';
-    responseEl.innerHTML = '<span class="shimmer" style="display:inline-block;width:100px;height:1em;border-radius:4px"></span>';
+    responseEl.innerHTML = '<div class="shimmer" style="height:20px; width:150px; border-radius:10px; margin: 10px 0;"></div>';
 
     try {
         const res = await apiFetch('/api/chat', {
@@ -608,12 +647,14 @@ window.sendMiniAI = async function () {
             body: JSON.stringify({ message: text })
         });
 
-        // Limitar resposta para caber no mini-chat (limpo)
-        const cleanRes = res.data.text.substring(0, 500);
-        responseEl.innerHTML = marked.parse(cleanRes);
-        responseEl.scrollTop = responseEl.scrollHeight;
+        if (res.success) {
+            // Efeito gradual de surgimento
+            await typeEffect(responseEl, res.data.text.substring(0, 500));
+        } else {
+            responseEl.textContent = 'Erro ao conectar com o Coach.';
+        }
     } catch (e) {
-        responseEl.textContent = 'Erro ao conectar. Tente o chat principal.';
+        responseEl.textContent = 'Erro de rede. Tente novamente.';
     }
 };
 

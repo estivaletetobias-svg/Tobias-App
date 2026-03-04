@@ -1,6 +1,6 @@
 // POST /api/onboarding
 // Salva dados do diagnóstico e cria thread OpenAI do aluno
-import { supabase, openai, ok, err } from '../_lib/clients.js';
+import { supabase, ok, err } from '../_lib/clients.js';
 import { getAuthUser } from '../_lib/auth.js';
 
 export default async function handler(req, res) {
@@ -16,13 +16,23 @@ export default async function handler(req, res) {
     } = req.body;
 
     try {
-        // Criar thread persistente na OpenAI
-        let thread;
-        try {
-            thread = await openai.beta.threads.create();
-        } catch (openaiErr) {
-            return res.status(500).json(err(`OpenAI falhou: ${openaiErr.message}`));
+        // Criar thread na OpenAI via fetch nativo (evita bug do SDK no Vercel)
+        const openaiRes = await fetch('https://api.openai.com/v1/threads', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json',
+                'OpenAI-Beta': 'assistants=v2',
+            },
+            body: JSON.stringify({}),
+        });
+
+        if (!openaiRes.ok) {
+            const errBody = await openaiRes.json();
+            return res.status(500).json(err(`OpenAI: ${errBody.error?.message || openaiRes.status}`));
         }
+
+        const thread = await openaiRes.json();
 
         // Salvar perfil no Supabase
         const { error: dbError } = await supabase

@@ -1,4 +1,4 @@
-# SYSTEM PROMPT — MASTER COACH IA
+# SYSTEM PROMPT — IA Personal Coach
 # Tobias Estivalete | IA Personal Coach
 # Versão 3.0 — Protocolo de Diagnóstico Completo
 # Cole TODO este conteúdo no campo "Instructions" do seu Assistente na plataforma da OpenAI.

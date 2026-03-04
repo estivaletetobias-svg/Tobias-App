@@ -52,6 +52,14 @@
     <main class="app-container">
         <!-- Dashboard Fold -->
         <section class="dashboard">
+            <!-- Daily Status Bar (Micro-metrics) -->
+            <div class="status-summary">
+                <div class="status-item"><span>⚡</span> <small>Energia</small><strong id="stat-energy">--</strong></div>
+                <div class="status-item"><span>🌙</span> <small>Sono</small><strong id="stat-sleep">--</strong></div>
+                <div class="status-item"><span>🧘</span> <small>Foco</small><strong id="stat-stress">--</strong></div>
+            </div>
+
+            <!-- Main Score Card -->
             <div class="glass-card discipline-card">
                 <h3>Discipline Score</h3>
                 <div class="score-circle">
@@ -73,14 +81,29 @@
                 <p>Status: <span class="badge">Elite</span></p>
             </div>
 
+            <!-- Next Workout Card -->
             <div class="glass-card next-workout">
-                <div class="card-header">
-                    <span>Treino de Hoje</span>
-                    <span class="tag">65min</span>
+                <div class="card-header highlight">
+                    <span>Treino do Dia</span>
+                    <span class="tag" id="workout-duration">--min</span>
                 </div>
-                <h2>Performance & Power</h2>
-                <p>Foco: Membros Superiores e Core</p>
-                <button class="aura-btn">Iniciar Sessão</button>
+                <h2 id="workout-title">Performance & Power</h2>
+                <div id="workout-focus"
+                    style="margin-bottom:20px; color:var(--text-sec); font-size:14px; display:flex; gap:8px; flex-wrap:wrap">
+                    <!-- Muscle groups will go here as small chips -->
+                </div>
+                <button class="aura-btn" id="start-session-btn">Iniciar Sessão</button>
+            </div>
+
+            <!-- Weekly Consistency -->
+            <div class="weekly-consistency">
+                <div class="consistency-header">
+                    <span>Consistência Semanal</span>
+                    <strong id="weekly-count">0/0 treinos</strong>
+                </div>
+                <div class="consistency-dots" id="weekly-dots">
+                    <!-- Dots will be generated via JS -->
+                </div>
             </div>
         </section>
 

@@ -789,8 +789,15 @@ async function initDashboard() {
     });
 
     if (profile.success) {
-        const score = profile.data.discipline_score || 0;
-        // Atualizar Score com animação suave
+        const data = profile.data;
+        const score = data.discipline_score || 0;
+
+        // Atualizar Status Bar
+        document.getElementById('stat-energy').textContent = data.daily_energy || 'Alta';
+        document.getElementById('stat-sleep').textContent = data.daily_sleep || '7.5h';
+        document.getElementById('stat-stress').textContent = data.daily_focus || 'Focado';
+
+        // Atualizar Score
         animateValue('.percentage', 0, score, 2000);
         const circle = document.getElementById('discipline-circle');
         if (circle) {
@@ -798,6 +805,43 @@ async function initDashboard() {
                 circle.style.strokeDasharray = `${score}, 100`;
             }, 600);
         }
+
+        // Renderizar Consistência Semanal
+        renderWeeklyConsistency(3); // Mock: 3 treinos concluídos
+    }
+
+    // Atualizar Preview de Treino no Dashboard
+    const workout = await apiFetch('/api/workout');
+    if (workout.success) {
+        const w = workout.data;
+        document.getElementById('workout-title').textContent = w.workout_name || 'Performance';
+        document.getElementById('workout-duration').textContent = `${w.duration_min || 45}min`;
+
+        const focusArea = document.getElementById('workout-focus');
+        if (focusArea && w.focus) {
+            focusArea.innerHTML = '';
+            w.focus.split(' e ').forEach(muscle => {
+                const chip = document.createElement('span');
+                chip.className = 'muscle-chip';
+                chip.textContent = muscle.trim();
+                focusArea.appendChild(chip);
+            });
+        }
+    }
+}
+
+function renderWeeklyConsistency(completed) {
+    const dotsContainer = document.getElementById('weekly-dots');
+    const countEl = document.getElementById('weekly-count');
+    if (!dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    countEl.textContent = `${completed}/5 treinos`;
+
+    for (let i = 0; i < 7; i++) {
+        const dot = document.createElement('div');
+        dot.className = `dot ${i < completed ? 'active' : ''}`;
+        dotsContainer.appendChild(dot);
     }
 }
 

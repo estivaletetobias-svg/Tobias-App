@@ -222,6 +222,33 @@ function detectWorkoutInMessage(text) {
     return matched >= 2;
 }
 
+// ― Extrair exercícios do texto da IA (para a tela de sessão usar o mesmo treino)
+function parseWorkoutFromAIText(text) {
+    const exercises = [];
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const nameMatch = line.match(/\*\*([^*]{3,40})\*\*/);
+        if (!nameMatch) continue;
+        const name = nameMatch[1].trim();
+        // Ignorar cabeçalhos de seção
+        if (/aquecimento|finaliza|visao|seção|semana|dia/i.test(name)) continue;
+        const combined = line + ' ' + (lines[i + 1] || '');
+        const srMatch = combined.match(/(\d+)\s*[xX×]\s*(\d+(?:-\d+)?)/);
+        const restMatch = combined.match(/[Dd]escanso[:\s]+(\d+)/);
+        const parts = combined.split('|');
+        const cue = parts.length > 2 ? parts[parts.length - 1].replace(/[*_`]/g, '').trim() : '';
+        exercises.push({
+            name,
+            sets: srMatch ? parseInt(srMatch[1]) : 3,
+            reps: srMatch ? srMatch[2] : '10-12',
+            rest_sec: restMatch ? parseInt(restMatch[1]) : 60,
+            cues: cue
+        });
+    }
+    return exercises.length >= 2 ? exercises : null;
+}
+
 // ― Injetar botão "Iniciar Sessão" após mensagem de treino
 function injectStartSessionButton(msgEl) {
     if (msgEl.querySelector('.start-session-btn')) return;
@@ -235,25 +262,29 @@ function injectStartSessionButton(msgEl) {
         btn.textContent = '⏳ Carregando treino...';
         btn.disabled = true;
         try {
-            const result = await apiFetch('/api/workout');
-            if (result.success && result.data.exercises?.length) {
-                window.todayExercises = result.data.exercises;
-                window.currentExIndex = 0;
-                window.skippedIndexes = [];
-                const h2 = document.querySelector('.next-workout h2');
-                const tag = document.querySelector('.next-workout .tag');
-                if (h2) h2.textContent = result.data.workout_name || 'Treino do Dia';
-                if (tag) tag.textContent = `${result.data.duration_min || 60}min`;
-                document.getElementById('chat-overlay').style.display = 'none';
-                document.getElementById('workout-overlay').style.display = 'block';
-                updateExerciseDisplay();
+            // Primeiro: tentar parsear o treino da mensagem da IA (mesmo treino prescrito!)
+            const msgText = btn.closest('.msg')?.innerText || '';
+            const parsed = parseWorkoutFromAIText(msgText);
+
+            if (parsed && parsed.length >= 2) {
+                // Usar exercícios diretamente do chat (same as IA prescribed)
+                window.todayExercises = parsed;
             } else {
-                btn.textContent = `⚠️ ${result.error || 'Erro — tente novamente'}`;
-                btn.disabled = false;
-                console.error('[workout]', result);
+                // Fallback: gerar novo treino via API
+                const result = await apiFetch('/api/workout');
+                if (!result.success || !result.data.exercises?.length) throw new Error(result.error || 'sem dados');
+                window.todayExercises = result.data.exercises;
             }
+
+            window.currentExIndex = 0;
+            window.skippedIndexes = [];
+            const h2 = document.querySelector('.next-workout h2');
+            if (h2) h2.textContent = window.todayExercises[0]?.name ? 'Treino do Dia' : 'Treino';
+            document.getElementById('chat-overlay').style.display = 'none';
+            document.getElementById('workout-overlay').style.display = 'block';
+            updateExerciseDisplay();
         } catch (e) {
-            btn.textContent = '⚠️ Erro de conexão — tente novamente';
+            btn.textContent = `⚠️ ${e.message || 'Erro — tente novamente'}`;
             btn.disabled = false;
             console.error('[workout]', e);
         }
@@ -514,19 +545,9 @@ function initEventListeners() {
 window.openVideoDrawer = function () {
     const name = window.currentExName || 'exercício';
     const query = encodeURIComponent(`${name} execução técnica`);
-    const drawer = document.getElementById('yt-drawer');
-    const nameEl = document.getElementById('yt-exercise-name');
-    const iframe = document.getElementById('yt-iframe');
-    const link = document.getElementById('yt-fallback-link');
-
-    if (nameEl) nameEl.textContent = name;
-    // Embed YouTube search (pode ser bloqueado por política — link de fallback sempre disponível)
-    if (iframe) iframe.src = `https://www.youtube.com/embed?listType=search&list=${query}&rel=0`;
-    if (link) {
-        link.href = `https://www.youtube.com/results?search_query=${query}`;
-        link.textContent = `🔗 Buscar "${name}" no YouTube`;
-    }
-    if (drawer) drawer.style.display = 'flex';
+    const ytUrl = `https://www.youtube.com/results?search_query=${query}`;
+    // YouTube não permite embed de busca — abrir direto em nova aba
+    window.open(ytUrl, '_blank', 'noopener');
 };
 
 window.closeVideoDrawer = function () {

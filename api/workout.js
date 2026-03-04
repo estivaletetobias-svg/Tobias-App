@@ -74,15 +74,15 @@ Retorne APENAS um JSON válido com este formato exato:
             await supabase.from('workout_logs').insert({
                 user_id: user.id,
                 workout_name,
-                perceived_effort,
-                logged_at: new Date().toISOString()
+                perceived_effort
+                // completed_at é auto-preenchido pelo Supabase
             });
 
             const { data: logs } = await supabase
                 .from('workout_logs')
                 .select('id')
                 .eq('user_id', user.id)
-                .gte('logged_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+                .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
             const newScore = Math.min(100, Math.round(((logs?.length || 0) / 30) * 100));
             await supabase.from('profiles').update({ discipline_score: newScore }).eq('id', user.id);

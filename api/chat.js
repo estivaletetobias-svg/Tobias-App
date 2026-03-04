@@ -80,7 +80,8 @@ Data e hora atual: ${dataHoje}
             method: 'POST',
             body: JSON.stringify({
                 assistant_id: ASSISTANT_ID,
-                model: 'gpt-4o-mini',
+                model: 'gpt-4o',       // qualidade máxima para MVP
+                temperature: 0.5,      // consistência técnica (era 1.0)
             }),
         });
         if (!runRes.ok) throw new Error(`Erro ao criar run: ${runRes.status}`);

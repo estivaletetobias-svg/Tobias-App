@@ -473,6 +473,56 @@
             box-shadow: 0 0 6px var(--red);
         }
 
+        /* Ranking Cards */
+        .ranking-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 16px;
+        }
+
+        .ranking-card {
+            background: #FFFFFF;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        .rank-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .rank-1 {
+            border: 2px solid gold;
+        }
+
+        .rank-2 {
+            border: 2px solid silver;
+        }
+
+        .rank-3 {
+            border: 2px solid #cd7f32;
+        }
+
+        @media (max-width: 900px) {
+            .ranking-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 1100px) {
             .stats-grid {
@@ -519,6 +569,8 @@
                 <span>Painel do Fundador</span>
             </div>
             <div class="topbar-right">
+                <button class="btn-refresh" onclick="exportToCSV()"
+                    style="background:var(--accent); color:white; border:none">📥 Exportar CSV</button>
                 <div id="executive-insight"
                     style="font-size:12px; font-weight:600; color:var(--accent); background:rgba(124,106,255,0.05); padding:8px 16px; border-radius:30px; border:1px solid rgba(124,106,255,0.1)">
                     Dashboard de Elite Ativo
@@ -534,6 +586,12 @@
                 <div class="loading" style="grid-column:1/-1">
                     <div class="spinner"></div> Carregando...
                 </div>
+            </div>
+
+            <!-- Ranking Section -->
+            <div id="ranking-section" style="display:none; margin-bottom:40px">
+                <div class="section-title">✨ Ranking de Elite (Top Disciplina)</div>
+                <div class="ranking-grid" id="ranking-grid"></div>
             </div>
 
             <!-- At Risk Alert -->
@@ -559,7 +617,7 @@
 
             <!-- All Clients -->
             <div class="section-title" style="margin-bottom:12px">Todos os Alunos</div>
-            <div class="filters">
+            <div class="filters" style="flex-wrap:wrap; gap:8px">
                 <input type="text" class="filter-input" id="search-input" placeholder="Buscar por nome ou email..."
                     oninput="filterClients()">
                 <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">Todos</button>
@@ -567,6 +625,9 @@
                 <button class="filter-btn" id="filter-onboarded" onclick="setFilter('onboarded')">Com
                     Onboarding</button>
                 <button class="filter-btn" id="filter-risk" onclick="setFilter('risk')">Em Risco</button>
+                <div style="width:1px; height:20px; background:rgba(0,0,0,0.1); margin:0 8px"></div>
+                <button class="filter-btn" id="filter-gym" onclick="setFilter('gym')">🏋️ Academia</button>
+                <button class="filter-btn" id="filter-home" onclick="setFilter('home')">🏠 Casa</button>
             </div>
 
             <div class="table-wrap">
@@ -733,8 +794,31 @@
                 riskSection.style.display = 'none';
             }
 
+            // Ranking Section
+            const rankingList = [...clients].sort((a, b) => b.discipline_score - a.discipline_score).slice(0, 3);
+            renderRanking(rankingList);
+
             renderTable();
-            document.getElementById('last-updated').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+            document.getElementById('executive-insight').textContent = `Elite: ${stats.avg_score} Avg Score`;
+        }
+
+        function renderRanking(list) {
+            const section = document.getElementById('ranking-section');
+            const grid = document.getElementById('ranking-grid');
+            if (!list.length) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
+
+            grid.innerHTML = list.map((c, i) => `
+                <div class="ranking-card rank-${i + 1}">
+                    <div class="rank-badge">TOP ${i + 1}</div>
+                    <div style="font-size:24px; margin-bottom:8px">${i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</div>
+                    <div class="name-cell" style="font-size:16px">${c.name}</div>
+                    <div class="value" style="font-size:32px; color:var(--accent); margin:12px 0">${c.discipline_score}</div>
+                    <div class="email-cell" style="margin-bottom:16px">Score de Disciplina</div>
+                    <a href="https://wa.me/?text=Parabéns ${c.name}! Você conquistou o Top ${i + 1} de disciplina no IA Coach com ${c.discipline_score} pontos! Continue firme!" 
+                       target="_blank" class="btn-refresh" style="background:rgba(124,106,255,0.05); color:var(--accent); border:1px solid rgba(124,106,255,0.1); display:block; text-decoration:none">Dar Parabéns 👋</a>
+                </div>
+            `).join('');
         }
 
         function renderTable() {
@@ -745,7 +829,9 @@
                     currentFilter === 'all' ? true :
                         currentFilter === 'active' ? c.is_active :
                             currentFilter === 'onboarded' ? c.has_onboarding :
-                                currentFilter === 'risk' ? (c.is_active && c.at_risk) : true;
+                                currentFilter === 'risk' ? (c.is_active && c.at_risk) :
+                                    currentFilter === 'gym' ? (c.workout_location === 'Academia') :
+                                        currentFilter === 'home' ? (c.workout_location === 'Casa') : true;
                 return matchSearch && matchFilter;
             });
 
@@ -798,10 +884,37 @@
 
         function filterClients() { renderTable(); }
 
+        async function exportToCSV() {
+            if (!allClients.length) return;
+            const headers = ['Nome', 'Email', 'Status', 'Score', 'Local', 'Onboarding', 'Ultimo Treino'];
+            const rows = allClients.map(c => [
+                c.name,
+                c.email,
+                c.is_active ? 'Ativo' : 'Inativo',
+                c.discipline_score,
+                c.workout_location,
+                c.has_onboarding ? 'Sim' : 'Nao',
+                c.last_workout ? `${c.last_workout.days_ago} dias atras` : 'Nunca'
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + headers.join(',') + "\n"
+                + rows.map(r => r.join(',')).join('\n');
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `relatorio_ia_coach_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function setFilter(f) {
             currentFilter = f;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('filter-' + f).classList.add('active');
+            const target = document.getElementById('filter-' + f);
+            if (target) target.classList.add('active');
             renderTable();
         }
 

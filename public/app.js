@@ -316,23 +316,20 @@ async function loadChatHistory() {
         msgs.innerHTML = '';
 
         if (result.success && result.data.messages.length > 0) {
-            // Mostrar apenas as últimas 6 mensagens (sessão mais recente)
-            // O thread completo fica na OpenAI — a IA lembra de tudo
-            const recent = result.data.messages.slice(-6);
+            // Usuário recorrente: mostrar as últimas mensagens reais
+            // Filtrar __init__ e respostas de diagnóstico inicial
+            const allMessages = result.data.messages.filter(m => {
+                if (m.role === 'user' && m.text.trim() === '__init__') return false;
+                if (m.role === 'assistant' && /seção 1|diagnóstico para que|vamos começar com o diagnóstico/i.test(m.text)) return false;
+                return true;
+            });
+            const recent = allMessages.slice(-8);
             for (const m of recent) {
                 const type = m.role === 'assistant' ? 'ai' : 'user';
                 appendMessage(m.text, type);
             }
-
-            // Saudação do dia — a IA pega o contexto e cumprimenta com base em hoje
-            const typing = appendMessage('●●●', 'ai typing');
-            const greeting = await apiFetch('/api/chat', {
-                method: 'POST',
-                body: JSON.stringify({ message: '__init__' }),
-            });
-            typing.remove();
-            if (greeting.success) {
-                appendMessage(greeting.data.text, 'ai');
+            if (recent.length === 0) {
+                appendMessage(`Olá, ${document.querySelector('.user-profile strong')?.textContent || 'Tobias'}! Pode falar — estou aqui.`, 'ai');
             }
 
         } else {
@@ -346,7 +343,7 @@ async function loadChatHistory() {
             if (greeting.success) {
                 appendMessage(greeting.data.text, 'ai');
             } else {
-                appendMessage('Pronto! Pode falar.', 'ai');
+                appendMessage('Olá! Pronto para começar? Me conta um pouco sobre você.', 'ai');
             }
         }
     } catch (e) {

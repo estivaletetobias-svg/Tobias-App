@@ -50,8 +50,8 @@ export default async function handler(req, res) {
 
         const { data: logs } = await supabase
             .from('workout_logs')
-            .select('user_id, workout_name, logged_at, perceived_effort')
-            .order('logged_at', { ascending: false });
+            .select('user_id, workout_name, completed_at, perceived_effort')
+            .order('completed_at', { ascending: false });
 
         const userMap = {};
         for (const u of users) userMap[u.id] = { email: u.email, created_at: u.created_at };
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
             const auth = userMap[p.id] || {};
             const lastLog = lastWorkoutMap[p.id];
             const daysSinceTrain = lastLog
-                ? Math.floor((now - new Date(lastLog.logged_at)) / (1000 * 60 * 60 * 24))
+                ? Math.floor((now - new Date(lastLog.completed_at)) / (1000 * 60 * 60 * 24))
                 : null;
             return {
                 id: p.id,
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
                 has_onboarding: !!p.openai_thread_id,
                 discipline_score: p.discipline_score || 0,
                 workout_location: p.workout_location || '—',
-                last_workout: lastLog ? { name: lastLog.workout_name, date: lastLog.logged_at, effort: lastLog.perceived_effort, days_ago: daysSinceTrain } : null,
+                last_workout: lastLog ? { name: lastLog.workout_name, date: lastLog.completed_at, effort: lastLog.perceived_effort, days_ago: daysSinceTrain } : null,
                 at_risk: daysSinceTrain === null ? p.is_active : daysSinceTrain >= 4,
                 member_since: auth.created_at || p.created_at,
             };

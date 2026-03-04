@@ -196,7 +196,12 @@ async function sendChatMessage() {
 function appendMessage(text, type) {
     const el = document.createElement('div');
     el.className = `msg ${type}`;
-    el.textContent = text;
+    if (type === 'ai' && typeof marked !== 'undefined') {
+        // Renderiza Markdown nas mensagens da IA
+        el.innerHTML = marked.parse(text);
+    } else {
+        el.textContent = text;
+    }
     chatMessages?.appendChild(el);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     return el;

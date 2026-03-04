@@ -2,7 +2,7 @@
 
 // ─── Configuração Supabase (Frontend usa Publishable Key) ──────────────────
 const SUPABASE_URL = 'https://oppuxdchoifqbhcyctzn.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'COLE_AQUI_SUA_PUBLISHABLE_KEY'; // sb_publishable_...
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_h8BlFlakeHSoks6e_w46GA_Q7S5KBup';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);

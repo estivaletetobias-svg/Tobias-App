@@ -108,7 +108,7 @@ window.startWithAI = async function () {
 
 // ─── Treino do Dia ─────────────────────────────────────────────────────────
 async function loadTodayWorkout() {
-    const result = await apiFetch('/api/workout/today');
+    const result = await apiFetch('/api/workout');
     if (!result.success) return;
 
     const w = result.data;
@@ -185,7 +185,7 @@ async function loadChatHistory() {
     msgs.innerHTML = '<div class="msg ai typing">...</div>';
 
     try {
-        const result = await apiFetch('/api/chat/history');
+        const result = await apiFetch('/api/chat');
         msgs.innerHTML = '';
 
         if (result.success && result.data.messages.length > 0) {
@@ -321,7 +321,7 @@ async function finishWorkoutSession() {
     const ex = window.todayExercises?.[0];
     if (!ex) return;
 
-    await apiFetch('/api/workout/log', {
+    await apiFetch('/api/workout', {
         method: 'POST',
         body: JSON.stringify({
             workout_name: document.querySelector('.next-workout h2')?.textContent,

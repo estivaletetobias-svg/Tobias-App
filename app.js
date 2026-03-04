@@ -543,40 +543,33 @@ window.openVideoDrawer = function () {
     const name = window.currentExName || 'exercício';
     const query = encodeURIComponent(`${name} execução técnica`);
     const ytUrl = `https://www.youtube.com/results?search_query=${query}`;
-    const drawer = document.getElementById('yt-drawer');
+    const dialog = document.getElementById('yt-dialog');
     const nameEl = document.getElementById('yt-exercise-name');
-    const link = document.getElementById('yt-fallback-link');
+    const link = document.getElementById('yt-link');
     if (nameEl) nameEl.textContent = name;
     if (link) link.href = ytUrl;
-    if (drawer) drawer.style.display = 'block';
+    if (dialog) dialog.showModal();
 };
 
 window.closeVideoDrawer = function () {
-    const drawer = document.getElementById('yt-drawer');
-    if (drawer) drawer.style.display = 'none';
+    document.getElementById('yt-dialog')?.close();
 };
 
-// ─── Mini-IA Drawer ──────────────────────────────────────────────────────
-window.toggleMiniAI = function () {
-    const drawer = document.getElementById('mini-ai-drawer');
-    if (!drawer) return;
-    const isOpen = drawer.style.display === 'block';
-    drawer.style.display = isOpen ? 'none' : 'block';
-    if (!isOpen) {
-        // Aberto: pré-preencher input com exercício atual
-        const input = document.getElementById('mini-ai-input');
-        const response = document.getElementById('mini-ai-response');
-        const ex = (window.todayExercises || [])[window.currentExIndex];
-        if (input) {
-            input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
-            setTimeout(() => input.focus(), 100);
-        }
-        if (response) {
-            response.style.display = 'none';
-            response.textContent = '';
-        }
-    }
+// ─── Mini-IA Dialog (nativo) ──────────────────────────────────────────────────
+window.openMiniAI = function () {
+    const dialog = document.getElementById('mini-ai-dialog');
+    if (!dialog) return;
+    const input = document.getElementById('mini-ai-input');
+    const response = document.getElementById('mini-ai-response');
+    const ex = (window.todayExercises || [])[window.currentExIndex];
+    if (input) input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
+    if (response) { response.textContent = ''; response.style.display = 'none'; }
+    dialog.showModal();
+    setTimeout(() => input?.focus(), 150);
 };
+
+// Alias para compatibilidade
+window.toggleMiniAI = window.openMiniAI;
 
 window.sendMiniAI = async function () {
     const input = document.getElementById('mini-ai-input');

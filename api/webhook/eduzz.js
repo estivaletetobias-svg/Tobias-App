@@ -62,35 +62,38 @@ export default async function handler(req, res) {
 
         if (!user) {
             // Novo aluno: criar conta automaticamente
-            const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+            const { data: newUserData, error: createErr } = await supabase.auth.admin.createUser({
                 email: customerEmail,
                 email_confirm: true,
-                user_metadata: { source: 'eduzz', is_active: isActive }
+                user_metadata: { source: 'eduzz' }
             });
             if (createErr) throw createErr;
-            user = newUser.user;
+            user = newUserData.user;
         }
 
         // Atualizar status de acesso no banco
-        const { error: upsertErr } = await supabase
+        await supabase
             .from('profiles')
             .upsert({ id: user.id, is_active: isActive });
-        if (upsertErr) throw upsertErr;
 
-        // Enviar Magic Link para novos alunos ativos
+        // Enviar Magic Link (não-bloqueante — erro aqui não derruba o webhook)
         if (isActive) {
-            await supabase.auth.admin.generateLink({
-                type: 'magiclink',
-                email: customerEmail,
-                options: { redirectTo: 'https://tobias-app-xi.vercel.app/' }
-            });
+            try {
+                await supabase.auth.admin.generateLink({
+                    type: 'magiclink',
+                    email: customerEmail,
+                });
+            } catch (linkErr) {
+                // Falha no Magic Link não impede o webhook de responder com sucesso
+                console.warn('[eduzz] Magic Link não enviado:', linkErr.message);
+            }
         }
 
         console.log(`[eduzz] ${event} → ${customerEmail} → is_active: ${isActive}`);
-        return res.status(200).json(ok({ processed: true, event, email: customerEmail, is_active: isActive }));
+        return res.status(200).json(ok({ processed: true, event, is_active: isActive }));
 
     } catch (e) {
-        console.error('[webhook/eduzz]', e);
-        return res.status(500).json(err('Erro ao processar webhook.'));
+        console.error('[webhook/eduzz] Erro:', e.message);
+        return res.status(500).json(err(`Erro ao processar: ${e.message}`));
     }
 }

@@ -54,22 +54,14 @@
             <!-- Step 3: Logistics -->
             <div class="onboarding-step" data-step="3">
                 <div class="glass-card">
-                    <h2>Logística & Arsenal</h2>
-                    <label>Onde você treina?</label>
+                    <h2>Onde você treina?</h2>
+                    <p>O Master Coach vai personalizar seus treinos com base no ambiente.</p>
                     <div class="option-grid">
                         <div class="option-card" onclick="selectOption(this, 'location')">🏠 Casa</div>
                         <div class="option-card" onclick="selectOption(this, 'location')">🏋️ Academia</div>
-                        <div class="option-card" onclick="selectOption(this, 'location')">🌳 Livre</div>
+                        <div class="option-card" onclick="selectOption(this, 'location')">🌳 Ar livre</div>
                     </div>
-                    <div class="input-group">
-                        <label>Equipamentos disponíveis</label>
-                        <div class="check-list">
-                            <label><input type="checkbox"> Halteres</label>
-                            <label><input type="checkbox"> Elásticos</label>
-                            <label><input type="checkbox"> Kettlebell</label>
-                        </div>
-                    </div>
-                    <button class="aura-btn" onclick="nextStep()">Configurar IA</button>
+                    <button class="aura-btn" onclick="nextStep()" style="margin-top:24px">Configurar IA</button>
                 </div>
             </div>
 
@@ -95,14 +87,17 @@
             <div class="onboarding-step" data-step="5">
                 <div class="glass-card aura-center">
                     <h2>Contrato de Performance</h2>
-                    <p>Eu comprometo minha disciplina para alcançar clareza e resultados.</p>
-                    <div class="signature-pad" id="signature">
-                        <span>Assine aqui com o dedo</span>
+                    <p style="margin-bottom:24px">Ao continuar, você assume o compromisso com sua evolução física,
+                        mental e disciplinar.</p>
+                    <div class="commitment-block">
+                        <p class="commitment-text">"Eu me comprometo com minha disciplina para alcançar clareza e
+                            resultados duradouros."</p>
                     </div>
-                    <button class="aura-btn" onclick="finishOnboarding()">Sincronizar E-sistema</button>
                 </div>
+                <button class="aura-btn" onclick="finishOnboarding()">Sincronizar E-sistema</button>
             </div>
         </div>
+    </div>
     </div>
 
     <nav class="top-nav">

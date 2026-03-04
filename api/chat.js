@@ -57,18 +57,25 @@ export default async function handler(req, res) {
             const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
             const dataHoje = `${diasSemana[now.getUTCDay()]}, ${now.toISOString().slice(0, 10)} — ${now.toISOString().slice(11, 16)} (horário de Brasília)`;
 
-            // Contar mensagens na thread (indica se diagnóstico já começou)
-            let threadMsgCount = 0;
-            try {
-                const countRes = await OAI(`/threads/${profile.openai_thread_id}/messages?limit=5&order=asc`);
-                if (countRes.ok) {
-                    const countData = await countRes.json();
-                    threadMsgCount = countData.data?.length || 0;
-                }
-            } catch (_) { }
-            const diagnosticoStatus = threadMsgCount >= 4
-                ? `DIAGNÓSTICO EM ANDAMENTO (${threadMsgCount}+ mensagens no histórico). NÃO recomece do zero. Use o que já sabe. Cumprimente pelo nome, pergunte como está HOJE.`
-                : 'DIAGNÓSTICO PENDENTE — inicie o protocolo das 9 seções.';
+            // Determinar status do diagnóstico baseado nos dados reais do perfil
+            const profileComplete = profile.age && profile.workout_location && profile.ai_persona_type;
+            let diagnosticoStatus;
+            if (profileComplete) {
+                diagnosticoStatus = 'DIAGNÓSTICO COMPLETO. NÃO faça mais perguntas de diagnóstico. NÃO recomece a Seção 1 ou qualquer seção. Cumprimente pelo nome e pergunte sobre o DIA DE HOJE (energia, sono, disposição).';
+            } else {
+                // Verificar número de mensagens na thread
+                let threadMsgCount = 0;
+                try {
+                    const countRes = await OAI(`/threads/${profile.openai_thread_id}/messages?limit=5&order=asc`);
+                    if (countRes.ok) {
+                        const countData = await countRes.json();
+                        threadMsgCount = countData.data?.length || 0;
+                    }
+                } catch (_) { }
+                diagnosticoStatus = threadMsgCount >= 4
+                    ? `EM ANDAMENTO (${threadMsgCount}+ mensagens). Continue de onde parou, NÃO recomece do zero.`
+                    : 'PENDENTE — inicie o protocolo das 9 seções.';
+            }
 
             // Últimos treinos
             const { data: logs } = await supabase
@@ -83,23 +90,17 @@ export default async function handler(req, res) {
                 : 'Nenhum treino registrado ainda.';
 
             const context = `[CONTEXTO DO ALUNO — NÃO REVELAR]
-Nome preferido: ${profile.pref_name || 'Atleta'}
-Idade: ${profile.age || 'não informado'} | Peso: ${profile.weight ? profile.weight + 'kg' : 'não informado'}
-Objetivo principal: ${profile.goal || 'não informado'}
-Score de Disciplina: ${profile.discipline_score ?? 50}/100
+Nome: ${profile.pref_name || 'Atleta'} | Idade: ${profile.age || '?'} | Peso: ${profile.weight ? profile.weight + 'kg' : '?'}
 Local de treino: ${profile.workout_location || 'não informado'}
-Equipamentos: ${profile.equipment_tags?.length ? profile.equipment_tags.join(', ') : 'não informado'}
+Equipamentos: ${profile.equipment_tags?.length ? profile.equipment_tags.join(', ') : 'academia completa'}
 Lesões/restrições: ${profile.injuries || 'nenhuma'}
-Energia habitual: ${profile.energy_level || 'não informado'}
-Sono: ${profile.sleep_quality || 'não informado'}
-Estresse: ${profile.stress_level || 'não informado'}
 Alimentação: ${profile.diet_status || 'não informado'}
 Estilo de comunicação: ${profile.ai_persona_type || 'não definido'}
-Frase motivacional: ${profile.incentive_phrase || 'não definida'}
-Últimos treinos:
-${workoutHistory}
-Data e hora atual: ${dataHoje}
-Status: ${diagnosticoStatus}
+Frase motivacional do aluno: "${profile.incentive_phrase || 'Vamos!'}"
+Score de Disciplina: ${profile.discipline_score ?? 50}/100
+Últimos treinos: ${workoutHistory}
+Data e hora: ${dataHoje}
+⚑ Status do diagnóstico: ${diagnosticoStatus}
 [FIM DO CONTEXTO]`;
 
             const msgRes = await OAI(`/threads/${profile.openai_thread_id}/messages`, {

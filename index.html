@@ -96,9 +96,10 @@
                 <button id="close-workout" class="close-btn">Sair</button>
             </div>
 
-            <div class="exercise-visual">
-                <div class="video-placeholder">
-                    <span>🎬 Loop de Execução</span>
+            <div class="exercise-visual" id="video-area">
+                <div class="video-placeholder" id="video-placeholder" onclick="openVideoDrawer()"
+                    style="cursor:pointer">
+                    <span>🎬 Ver execução</span>
                 </div>
             </div>
 
@@ -151,10 +152,75 @@
                 ⚠️ Você pulou <span id="skipped-count">0</span> exercício(s). Clique para revisitar.
             </div>
 
-            <div class="quick-ai-help" id="quick-ai-trigger">
+            <div class="quick-ai-help" id="quick-ai-trigger" onclick="toggleMiniAI()" style="cursor:pointer">
                 <span>Dúvida na execução? Pergunte à IA</span>
                 <div class="mini-bubble">✨</div>
             </div>
+
+            <!-- Botão Concluir Treino — sempre visível -->
+            <button id="finish-workout-btn" onclick="finishWorkoutSession()"
+                style="display:block;width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;font-family:Outfit,sans-serif;letter-spacing:.4px;transition:opacity .2s">
+                ✅ Concluir Treino
+            </button>
+        </div>
+    </div>
+
+    <!-- YouTube Drawer -->
+    <div id="yt-drawer"
+        style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.85);align-items:flex-end">
+        <div
+            style="width:100%;max-width:600px;margin:0 auto;background:#111;border-radius:20px 20px 0 0;padding:16px;max-height:70vh;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span id="yt-exercise-name" style="font-weight:700;color:#fff;font-size:15px"></span>
+                <button onclick="closeVideoDrawer()"
+                    style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button>
+            </div>
+            <iframe id="yt-iframe" src="" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen style="width:100%;height:220px;border-radius:12px;background:#000"></iframe>
+            <a id="yt-fallback-link" href="" target="_blank" rel="noopener"
+                style="display:block;margin-top:12px;text-align:center;color:#7c6aff;font-size:13px;text-decoration:none">
+                🔗 Abrir no YouTube
+            </a>
+        </div>
+    </div>
+
+    <!-- Mini-IA Drawer -->
+    <div id="mini-ai-drawer"
+        style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);align-items:flex-end">
+        <div style="width:100%;max-width:600px;margin:0 auto;background:#111;border-radius:20px 20px 0 0;padding:20px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                <span style="color:#fff;font-weight:700">✨ Pergunte ao Coach</span>
+                <button onclick="toggleMiniAI()"
+                    style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button>
+            </div>
+            <div id="mini-ai-response"
+                style="color:#ccc;font-size:13px;margin-bottom:12px;min-height:40px;line-height:1.6"></div>
+            <div style="display:flex;gap:8px">
+                <input id="mini-ai-input" type="text" placeholder="Diga sua dúvida..." autocomplete="off"
+                    style="flex:1;padding:12px 14px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff;font-family:Outfit,sans-serif;font-size:13px;outline:none"
+                    onkeydown="if(event.key==='Enter') sendMiniAI()">
+                <button onclick="sendMiniAI()"
+                    style="padding:12px 18px;border-radius:10px;background:#7c6aff;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Treino Concluído -->
+    <div id="workout-complete-modal"
+        style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.9);align-items:center;justify-content:center">
+        <div
+            style="background:#111;border-radius:24px;padding:40px 32px;text-align:center;max-width:360px;width:90%;border:1px solid #22c55e33">
+            <div style="font-size:56px;margin-bottom:12px">🌟</div>
+            <h2 style="color:#fff;font-size:22px;margin-bottom:8px">Treino Concluído!</h2>
+            <p id="complete-msg" style="color:#aaa;font-size:14px;margin-bottom:24px">Excelente foco, Tobias. Vamos
+                cavalo!!!</p>
+            <div id="complete-score" style="font-size:32px;font-weight:700;color:#22c55e;margin-bottom:8px"></div>
+            <p style="color:#666;font-size:12px;margin-bottom:28px">Discipline Score atualizado</p>
+            <button onclick="dismissCompleteModal()"
+                style="width:100%;padding:14px;background:linear-gradient(135deg,#7c6aff,#4fc8ff);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:Outfit,sans-serif">
+                Voltar ao Dashboard
+            </button>
         </div>
     </div>
 

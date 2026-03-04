@@ -183,19 +183,8 @@ function updateExerciseDisplay() {
         }
     }
 
-    // ― 5: Link YouTube para o exercício atual
-    const videoEl = document.querySelector('.video-placeholder');
-    if (videoEl && ex.name) {
-        const ytQuery = encodeURIComponent(`${ex.name} execução técnica`);
-        const ytUrl = `https://www.youtube.com/results?search_query=${ytQuery}`;
-        videoEl.innerHTML = `
-            <a href="${ytUrl}" target="_blank" rel="noopener"
-               style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:inherit;text-decoration:none;gap:12px">
-                <span style="font-size:42px">🎬</span>
-                <span style="font-size:13px;opacity:.7">Ver execução no YouTube</span>
-                <span style="font-size:11px;opacity:.5;max-width:180px;text-align:center">${ex.name}</span>
-            </a>`;
-    }
+    // Guardar nome do exercício para o drawer de vídeo
+    window.currentExName = ex.name || '';
 
     // Reset timer display ao navegar
     const display = document.getElementById('timer');
@@ -518,9 +507,71 @@ function initEventListeners() {
                 input.focus();
             }
         }
-        document.getElementById('chat-overlay').style.display = 'block';
     });
 }
+
+// ─── YouTube Drawer ────────────────────────────────────────────────────────
+window.openVideoDrawer = function () {
+    const name = window.currentExName || 'exercício';
+    const query = encodeURIComponent(`${name} execução técnica`);
+    const drawer = document.getElementById('yt-drawer');
+    const nameEl = document.getElementById('yt-exercise-name');
+    const iframe = document.getElementById('yt-iframe');
+    const link = document.getElementById('yt-fallback-link');
+
+    if (nameEl) nameEl.textContent = name;
+    // Embed YouTube search (pode ser bloqueado por política — link de fallback sempre disponível)
+    if (iframe) iframe.src = `https://www.youtube.com/embed?listType=search&list=${query}&rel=0`;
+    if (link) {
+        link.href = `https://www.youtube.com/results?search_query=${query}`;
+        link.textContent = `🔗 Buscar "${name}" no YouTube`;
+    }
+    if (drawer) drawer.style.display = 'flex';
+};
+
+window.closeVideoDrawer = function () {
+    const drawer = document.getElementById('yt-drawer');
+    const iframe = document.getElementById('yt-iframe');
+    if (iframe) iframe.src = ''; // para o vídeo
+    if (drawer) drawer.style.display = 'none';
+};
+
+// ─── Mini-IA Drawer ───────────────────────────────────────────────────────
+window.toggleMiniAI = function () {
+    const drawer = document.getElementById('mini-ai-drawer');
+    if (!drawer) return;
+    const isOpen = drawer.style.display === 'flex';
+    drawer.style.display = isOpen ? 'none' : 'flex';
+    if (!isOpen) {
+        const input = document.getElementById('mini-ai-input');
+        const response = document.getElementById('mini-ai-response');
+        const ex = (window.todayExercises || [])[window.currentExIndex];
+        if (input) input.value = ex ? `Tenho uma dúvida sobre ${ex.name}: ` : '';
+        if (response) response.textContent = '';
+        setTimeout(() => input?.focus(), 100);
+    }
+};
+
+window.sendMiniAI = async function () {
+    const input = document.getElementById('mini-ai-input');
+    const response = document.getElementById('mini-ai-response');
+    const question = input?.value?.trim();
+    if (!question) return;
+
+    if (response) response.textContent = '⏳ Aguarde...';
+    input.value = '';
+
+    const result = await apiFetch('/api/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message: question })
+    });
+
+    if (result.success) {
+        if (response) response.textContent = result.data.text.substring(0, 300) + (result.data.text.length > 300 ? '...' : '');
+    } else {
+        if (response) response.textContent = 'Erro ao consultar a IA.';
+    }
+};
 
 // ─── Registrar Treino Concluído ─────────────────────────────────────────────
 // Ir para o primeiro exercício pulado
@@ -533,31 +584,43 @@ window.goToSkipped = function () {
 };
 
 async function finishWorkoutSession() {
-    const ex = window.todayExercises?.[0];
-    if (!ex) return;
+    // Fechar overlay de treino
+    document.getElementById('workout-overlay').style.display = 'none';
 
-    await apiFetch('/api/workout', {
+    const workoutName = document.querySelector('.next-workout h2')?.textContent || 'Treino do Dia';
+    const incentive = document.querySelector('.user-profile strong')?.textContent || 'Atleta';
+
+    // Registrar treino no banco
+    const result = await apiFetch('/api/workout', {
         method: 'POST',
-        body: JSON.stringify({
-            workout_name: document.querySelector('.next-workout h2')?.textContent,
-            perceived_effort: 7
-        })
+        body: JSON.stringify({ workout_name: workoutName, perceived_effort: 7 })
     });
 
-    // Recarregar Score atualizado
-    const { data: profile } = await sb
-        .from('profiles')
-        .select('discipline_score')
-        .eq('id', currentUser.id)
-        .single();
-
-    if (profile?.discipline_score != null) {
+    // Atualizar score no dashboard
+    const newScore = result?.data?.discipline_score;
+    if (newScore != null) {
         const scoreEl = document.querySelector('.percentage');
         const circleEl = document.querySelector('.circle');
-        if (scoreEl) scoreEl.textContent = profile.discipline_score;
-        if (circleEl) circleEl.setAttribute('stroke-dasharray', `${profile.discipline_score}, 100`);
+        if (scoreEl) scoreEl.textContent = newScore;
+        if (circleEl) circleEl.setAttribute('stroke-dasharray', `${newScore}, 100`);
     }
+
+    // Mostrar modal de celebração
+    const modal = document.getElementById('workout-complete-modal');
+    const scoreDisplay = document.getElementById('complete-score');
+    const msgEl = document.getElementById('complete-msg');
+    if (modal) modal.style.display = 'flex';
+    if (scoreDisplay && newScore) scoreDisplay.textContent = `Score: ${newScore}/100`;
+    if (msgEl) msgEl.textContent = `Excelente foco! Treino registrado com sucesso. 🔥`;
+
+    // Resetar lista de pulados
+    window.skippedIndexes = [];
 }
+
+window.dismissCompleteModal = function () {
+    const modal = document.getElementById('workout-complete-modal');
+    if (modal) modal.style.display = 'none';
+};
 
 // ─── Logout (disponível globalmente) ──────────────────────────────────────
 window.logout = async function () {

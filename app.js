@@ -538,6 +538,17 @@ function initEventListeners() {
     });
 }
 
+// ─── Drawer Management ───────────────────────────────────────────────────
+function toggleBodyScroll(lock) {
+    document.body.style.overflow = lock ? 'hidden' : '';
+}
+
+// Global Dialog Listeners
+document.querySelectorAll('dialog').forEach(d => {
+    d.onclick = (e) => { if (e.target === d) d.close(); };
+    d.onclose = () => toggleBodyScroll(false);
+});
+
 // ─── YouTube Drawer ────────────────────────────────────────────────────────
 window.openVideoDrawer = function () {
     const name = window.currentExName || 'exercício';
@@ -548,24 +559,25 @@ window.openVideoDrawer = function () {
     const link = document.getElementById('yt-link');
     if (nameEl) nameEl.textContent = name;
     if (link) link.href = ytUrl;
-    if (dialog) dialog.showModal();
-};
-
-window.closeVideoDrawer = function () {
-    document.getElementById('yt-dialog')?.close();
+    if (dialog) {
+        dialog.showModal();
+        toggleBodyScroll(true);
+    }
 };
 
 // ─── Mini-IA Dialog (nativo) ──────────────────────────────────────────────────
 window.openMiniAI = function () {
     const dialog = document.getElementById('mini-ai-dialog');
-    if (!dialog) return;
     const input = document.getElementById('mini-ai-input');
     const response = document.getElementById('mini-ai-response');
-    const ex = (window.todayExercises || [])[window.currentExIndex];
-    if (input) input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
-    if (response) { response.textContent = ''; response.style.display = 'none'; }
-    dialog.showModal();
-    setTimeout(() => input?.focus(), 150);
+    if (dialog) {
+        const ex = (window.todayExercises || [])[window.currentExIndex];
+        if (input) input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
+        if (response) { response.textContent = ''; response.style.display = 'none'; }
+        dialog.showModal();
+        toggleBodyScroll(true);
+        setTimeout(() => input?.focus(), 150);
+    }
 };
 
 // Alias para compatibilidade
@@ -573,23 +585,26 @@ window.toggleMiniAI = window.openMiniAI;
 
 window.sendMiniAI = async function () {
     const input = document.getElementById('mini-ai-input');
-    const response = document.getElementById('mini-ai-response');
-    const question = input?.value?.trim();
-    if (!question) return;
+    const responseEl = document.getElementById('mini-ai-response');
+    const text = input.value.trim();
+    if (!text) return;
 
-    if (response) { response.textContent = '⏳ Aguarde...'; response.style.display = 'block'; }
     input.value = '';
+    responseEl.style.display = 'block';
+    responseEl.innerHTML = '<span class="shimmer" style="display:inline-block;width:100px;height:1em;border-radius:4px"></span>';
 
-    const result = await apiFetch('/api/chat', {
-        method: 'POST',
-        body: JSON.stringify({ message: question })
-    });
+    try {
+        const res = await apiFetch('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ message: text })
+        });
 
-    if (result.success) {
-        const text = result.data.text;
-        if (response) { response.textContent = text.substring(0, 400) + (text.length > 400 ? '...' : ''); response.style.display = 'block'; }
-    } else {
-        if (response) { response.textContent = 'Erro ao consultar a IA.'; response.style.display = 'block'; }
+        // Limitar resposta para caber no mini-chat (limpo)
+        const cleanRes = res.data.text.substring(0, 500);
+        responseEl.innerHTML = marked.parse(cleanRes);
+        responseEl.scrollTop = responseEl.scrollHeight;
+    } catch (e) {
+        responseEl.textContent = 'Erro ao conectar. Tente o chat principal.';
     }
 };
 

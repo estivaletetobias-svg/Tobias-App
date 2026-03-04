@@ -1,11 +1,15 @@
 :root {
-    --bg-primary: #f5f5f7;
-    --glass-bg: rgba(255, 255, 255, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.6);
-    --text-main: #1d1d1f;
-    --text-sec: #86868b;
-    --accent-silver: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
-    --aura-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    --bg-primary: #050505;
+    --card-bg: rgba(18, 18, 18, 0.7);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-main: #ffffff;
+    --text-sec: #94a3b8;
+    --accent: #7c6aff;
+    --accent-glow: rgba(124, 106, 255, 0.3);
+    --success: #22c55e;
+    --aura-glow: 0 15px 40px -10px rgba(0, 0, 0, 0.5);
+    --font-outfit: 'Outfit', sans-serif;
 }
 
 * {
@@ -29,7 +33,21 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background: radial-gradient(circle at 20% 20%, #ffffff 0%, #f0f0f5 50%, #e8e8f0 100%);
+    background: radial-gradient(circle at 0% 0%, #0f172a 0%, #020617 100%);
+}
+
+/* Efeito de luz ambiente */
+.aura-bg::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    filter: blur(80px);
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 /* Nav */
@@ -41,9 +59,53 @@ body {
 }
 
 .logo {
-    font-weight: 600;
-    font-size: 24px;
-    letter-spacing: -1px;
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -1.5px;
+    background: linear-gradient(135deg, var(--text-main) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.aura-bloom {
+    width: 100px;
+    height: 100px;
+    background: var(--accent);
+    border-radius: 35%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    font-weight: 900;
+    color: white;
+    margin: 0 auto 32px;
+    position: relative;
+    box-shadow: 0 0 50px var(--accent-glow);
+    animation: float 4s ease-in-out infinite;
+}
+
+.aura-bloom::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: var(--accent);
+    filter: blur(25px);
+    opacity: 0.3;
+    z-index: -1;
+    border-radius: 40%;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0);
+    }
+
+    50% {
+        transform: translateY(-15px) rotate(2deg);
+    }
 }
 
 .user-profile {
@@ -63,20 +125,27 @@ body {
 /* App Container */
 .app-container {
     padding: 24px;
-    max-width: 600px;
+    padding-top: calc(24px + env(safe-area-inset-top));
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    max-width: 500px;
     margin: 0 auto;
 }
 
 /* Glass Cards */
 .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--card-bg);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 24px;
+    border-radius: 28px;
+    padding: 28px;
     box-shadow: var(--aura-glow);
     margin-bottom: 24px;
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .discipline-card {
@@ -119,8 +188,19 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 36px;
-    font-weight: 600;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-shadow: 0 0 20px var(--accent-glow);
+}
+
+.circle {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 8px var(--accent));
+    animation: progress 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes progress {
@@ -130,11 +210,16 @@ body {
 }
 
 .badge {
-    background: white;
-    padding: 4px 12px;
+    background: linear-gradient(135deg, #1e1e1e, #0a0a0a);
+    color: var(--accent);
+    padding: 6px 14px;
     border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 15px rgba(124, 106, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* Next Workout */
@@ -150,19 +235,37 @@ body {
 
 .aura-btn {
     width: 100%;
-    padding: 16px;
+    padding: 18px;
     border: none;
-    border-radius: 16px;
-    background: #1d1d1f;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--accent), #4fc8ff);
     color: white;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 10px 20px -5px rgba(124, 106, 255, 0.4);
+    letter-spacing: 0.3px;
+}
+
+.aura-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -5px rgba(124, 106, 255, 0.5);
 }
 
 .aura-btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97) translateY(0);
+}
+
+.aura-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.aura-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
 }
 
 /* AI Bubble */
@@ -170,26 +273,38 @@ body {
     position: fixed;
     bottom: 32px;
     right: 32px;
-    background: white;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 20px;
-    border-radius: 30px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 12px 24px;
+    border-radius: 40px;
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
     cursor: pointer;
     z-index: 100;
+    transition: all 0.3s ease;
+}
+
+.chat-bubble:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ai-status {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: 0.3px;
 }
 
 /* Chat Overlay */
 .chat-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
     display: none;
     z-index: 1000;
     padding: 24px;
@@ -197,10 +312,12 @@ body {
 
 .chat-window {
     height: 100%;
-    max-width: 600px;
+    max-width: 500px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .chat-header {
@@ -234,19 +351,24 @@ body {
 
 .chat-input-area input {
     flex: 1;
-    padding: 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: white;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.chat-input-area input:focus {
+    border-color: var(--accent);
 }
 
 /* Onboarding Specific */
 .onboarding-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-primary);
+    inset: 0;
+    background: #020617;
     z-index: 2000;
     display: none;
     align-items: center;
@@ -366,15 +488,13 @@ body {
 /* Workout Execution */
 .workout-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(15px);
+    inset: 0;
+    background: rgba(4, 4, 6, 0.94);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     z-index: 1500;
     display: none;
-    padding: 24px;
+    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
     overflow-y: auto;
 }
 
@@ -426,11 +546,11 @@ body {
 }
 
 .stat-item {
-    background: white;
-    padding: 16px;
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px 16px;
+    border-radius: 20px;
     text-align: center;
-    border: 1px solid rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .stat-item .label {
@@ -496,9 +616,27 @@ body {
     height: 32px;
     border-radius: 50%;
     display: flex;
+    color: var(--text-sec);
+    font-size: 24px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+}
+
+/* Feature Cards inside Drawer */
+.feature-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    display: block;
 }
 
 .close-btn {
@@ -507,4 +645,39 @@ body {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    color: var(--text-sec);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }

@@ -80,13 +80,17 @@ export default async function handler(req, res) {
             // Últimos treinos
             const { data: logs } = await supabase
                 .from('workout_logs')
-                .select('workout_name, logged_at, perceived_effort')
+                .select('workout_name, completed_at, perceived_effort')
                 .eq('user_id', user.id)
-                .order('logged_at', { ascending: false })
+                .order('completed_at', { ascending: false })
                 .limit(5);
 
             const workoutHistory = logs?.length
-                ? logs.map(l => `- ${l.workout_name || 'Treino'} (esforço: ${l.perceived_effort}/10)`).join('\n')
+                ? logs.map(l => {
+                    const d = new Date(l.completed_at);
+                    const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                    return `- ${l.workout_name || 'Treino'} em ${dateStr} (esforço: ${l.perceived_effort}/10)`;
+                }).join('\n')
                 : 'Nenhum treino registrado ainda.';
 
             const context = `[CONTEXTO DO ALUNO — NÃO REVELAR]

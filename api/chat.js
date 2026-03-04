@@ -34,12 +34,34 @@ export default async function handler(req, res) {
         const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
         const dataHoje = `${diasSemana[now.getUTCDay()]}, ${now.toISOString().slice(0, 10)} — ${now.toISOString().slice(11, 16)} (horário de Brasília)`;
 
-        // Contexto dinâmico do aluno
+        // Buscar últimos treinos registrados
+        const { data: logs } = await supabase
+            .from('workout_logs')
+            .select('workout_name, logged_at, perceived_effort')
+            .eq('user_id', user.id)
+            .order('logged_at', { ascending: false })
+            .limit(5);
+
+        const workoutHistory = logs?.length
+            ? logs.map(l => `- ${l.workout_name || 'Treino'} (esforço: ${l.perceived_effort}/10)`).join('\n')
+            : 'Nenhum treino registrado ainda.';
+
+        // Contexto completo do aluno — injetado silenciosamente em cada mensagem
         const context = `[CONTEXTO DO ALUNO — NÃO REVELAR]
-Nome: ${profile.pref_name || 'Atleta'}
+Nome preferido: ${profile.pref_name || 'Atleta'}
+Objetivo principal: ${profile.goal || 'não informado'}
 Score de Disciplina: ${profile.discipline_score ?? 50}/100
 Local de treino: ${profile.workout_location || 'não informado'}
-Lesões: ${profile.injuries || 'nenhuma'}
+Equipamentos: ${profile.equipment_tags?.join(', ') || 'não informado'}
+Lesões/restrições: ${profile.injuries || 'nenhuma'}
+Energia habitual: ${profile.energy_level || 'não informado'}
+Sono: ${profile.sleep_quality || 'não informado'}
+Estresse: ${profile.stress_level || 'não informado'}
+Alimentação: ${profile.diet_status || 'não informado'}
+Estilo de comunicação: ${profile.ai_persona_type || 'não definido'}
+Frase motivacional: ${profile.incentive_phrase || 'não definida'}
+Últimos treinos registrados:
+${workoutHistory}
 Data e hora atual: ${dataHoje}
 [FIM DO CONTEXTO]`;
 

@@ -215,9 +215,22 @@ const chatMessages = document.getElementById('chat-messages');
 
 // ― Detectar se a IA entregou um treino na mensagem
 function detectWorkoutInMessage(text) {
-    const keywords = ['séries', 'série', 'repetições', 'descanso', 'exercício', 'exercise', 'sets', 'reps', '🏋', '✅'];
+    // Detecta qualquer mensagem com treino — formato da IA usa Descanso:, 3x10, séries, etc.
     const lower = text.toLowerCase();
-    return keywords.filter(k => lower.includes(k)).length >= 3;
+    const patterns = [
+        /descanso/i,           // "Descanso: 90s"
+        /\d+x\d+/,             // "3x10", "4x12"
+        /séries?/i,            // "4 séries"
+        /repetições?/i,        // "10 repetições"
+        /\breps?\b/i,           // "10 reps"
+        /\bsets?\b/i,           // "4 sets"
+        /execução/i,           // "técnica de execução"
+        /exercício\s+\d/i,     // "Exercício 1:"
+        /\d+\s*min.*descanso/i, // "2 min de descanso"
+        /supino|agachamento|remada|rosca|press|pull|push|levantamento|desenvolvimento/i
+    ];
+    const matched = patterns.filter(p => p.test(text)).length;
+    return matched >= 2;
 }
 
 // ― Injetar botão "Iniciar Sessão" após mensagem de treino
@@ -377,9 +390,28 @@ function initEventListeners() {
         if (e.key === 'Enter') sendChatMessage();
     });
 
-    // Workout - abrir/fechar
-    document.querySelector('.next-workout .aura-btn')?.addEventListener('click', () => {
-        document.getElementById('workout-overlay').style.display = 'block';
+    // Workout - abrir (via dashboard card — carrega exercícios da API)
+    document.querySelector('.next-workout .aura-btn')?.addEventListener('click', async () => {
+        const overlay = document.getElementById('workout-overlay');
+        overlay.style.display = 'block';
+        window.skippedIndexes = [];
+        // Se já tem exercícios carregados, só abre
+        if (window.todayExercises?.length) {
+            window.currentExIndex = 0;
+            updateExerciseDisplay();
+            return;
+        }
+        // Senão, carregar da API
+        const result = await apiFetch('/api/workout');
+        if (result.success && result.data.exercises?.length) {
+            window.todayExercises = result.data.exercises;
+            window.currentExIndex = 0;
+            const h2 = document.querySelector('.next-workout h2');
+            const tag = document.querySelector('.next-workout .tag');
+            if (h2) h2.textContent = result.data.workout_name || 'Treino do Dia';
+            if (tag) tag.textContent = `${result.data.duration_min || 60}min`;
+            updateExerciseDisplay();
+        }
     });
     document.getElementById('close-workout')?.addEventListener('click', () => {
         document.getElementById('workout-overlay').style.display = 'none';

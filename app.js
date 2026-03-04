@@ -140,10 +140,77 @@ function updateExerciseDisplay() {
     if (stats[0]) stats[0].textContent = ex.sets || '--';
     if (stats[1]) stats[1].textContent = ex.reps || '--';
     if (stats[2]) stats[2].textContent = ex.rest_sec ? `${ex.rest_sec}s` : '--';
+
+    // ― 5: Link YouTube para o exercício atual
+    const videoEl = document.querySelector('.video-placeholder');
+    if (videoEl && ex.name) {
+        const ytQuery = encodeURIComponent(`${ex.name} execução técnica`);
+        const ytUrl = `https://www.youtube.com/results?search_query=${ytQuery}`;
+        videoEl.innerHTML = `
+            <a href="${ytUrl}" target="_blank" rel="noopener"
+               style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:inherit;text-decoration:none;gap:12px">
+                <span style="font-size:42px">🎬</span>
+                <span style="font-size:13px;opacity:.7">Ver execução no YouTube</span>
+                <span style="font-size:11px;opacity:.5;max-width:180px;text-align:center">${ex.name}</span>
+            </a>`;
+    }
+
+    // Reset timer display ao navegar
+    const display = document.getElementById('timer');
+    if (display) {
+        const restSec = ex.rest_sec || 60;
+        const m = Math.floor(restSec / 60).toString().padStart(2, '0');
+        const s = (restSec % 60).toString().padStart(2, '0');
+        display.textContent = `${m}:${s}`;
+        display.style.color = '';
+    }
+    const restBtn = document.getElementById('start-rest');
+    if (restBtn) { restBtn.disabled = false; restBtn.textContent = 'Iniciar Descanso'; }
 }
 
 // ─── Chat Real com OpenAI ──────────────────────────────────────────────────
 const chatMessages = document.getElementById('chat-messages');
+
+// ― Detectar se a IA entregou um treino na mensagem
+function detectWorkoutInMessage(text) {
+    const keywords = ['séries', 'série', 'repetições', 'descanso', 'exercício', 'exercise', 'sets', 'reps', '🏋', '✅'];
+    const lower = text.toLowerCase();
+    return keywords.filter(k => lower.includes(k)).length >= 3;
+}
+
+// ― Injetar botão "Iniciar Sessão" após mensagem de treino
+function injectStartSessionButton(msgEl) {
+    if (msgEl.querySelector('.start-session-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'start-session-btn';
+    btn.innerHTML = '▶ Iniciar Sessão de Treino';
+    btn.style.cssText = 'display:block;width:100%;margin-top:14px;padding:12px 16px;background:linear-gradient(135deg,#7c6aff,#4fc8ff);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:Outfit,sans-serif;letter-spacing:.5px;transition:opacity .2s';
+    btn.onmouseenter = () => btn.style.opacity = '.85';
+    btn.onmouseleave = () => btn.style.opacity = '1';
+    btn.addEventListener('click', async () => {
+        btn.textContent = 'Carregando treino...';
+        btn.disabled = true;
+        // Carregar treino estruturado da API (gera JSON com exercícios)
+        const result = await apiFetch('/api/workout');
+        if (result.success && result.data.exercises?.length) {
+            window.todayExercises = result.data.exercises;
+            window.currentExIndex = 0;
+            // Atualizar card de treino do dashboard
+            const h2 = document.querySelector('.next-workout h2');
+            const tag = document.querySelector('.next-workout .tag');
+            if (h2) h2.textContent = result.data.workout_name || 'Treino do Dia';
+            if (tag) tag.textContent = `${result.data.duration_min || 60}min`;
+            // Fechar chat, abrir sessão
+            document.getElementById('chat-overlay').style.display = 'none';
+            document.getElementById('workout-overlay').style.display = 'block';
+            updateExerciseDisplay();
+        } else {
+            btn.textContent = '▶ Iniciar Sessão de Treino';
+            btn.disabled = false;
+        }
+    });
+    msgEl.appendChild(btn);
+}
 
 async function sendChatMessage() {
     const input = document.querySelector('.chat-input-area input');
@@ -168,8 +235,13 @@ async function sendChatMessage() {
             return;
         }
 
-        appendMessage(result.data.text, 'ai');
+        const msgEl = appendMessage(result.data.text, 'ai');
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // ― 3: Detectar treino e mostrar botão de sessão
+        if (detectWorkoutInMessage(result.data.text)) {
+            injectStartSessionButton(msgEl);
+        }
 
     } catch (e) {
         typingEl?.remove();
@@ -272,16 +344,17 @@ function initEventListeners() {
         }
     });
 
-    // Timer de descanso
+    // Timer de descanso ― 2: cores de alerta
     let timerInterval;
     document.getElementById('start-rest')?.addEventListener('click', () => {
         const ex = (window.todayExercises || [])[window.currentExIndex];
-        let timeLeft = ex?.rest_sec || 45;
+        let timeLeft = ex?.rest_sec || 60;
         const btn = document.getElementById('start-rest');
         const display = document.getElementById('timer');
 
         btn.disabled = true;
         btn.textContent = 'Descansando...';
+        display.style.color = '';
         clearInterval(timerInterval);
 
         timerInterval = setInterval(() => {
@@ -290,19 +363,33 @@ function initEventListeners() {
             const s = (timeLeft % 60).toString().padStart(2, '0');
             display.textContent = `${m}:${s}`;
 
+            // Cores de alerta
+            if (timeLeft <= 0) {
+                display.style.color = '#ef4444'; // vermelho
+            } else if (timeLeft <= 10) {
+                display.style.color = '#f59e0b'; // laranja
+            } else {
+                display.style.color = '';
+            }
+
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                display.textContent = '00:00';
+                display.textContent = 'VÁ!';
                 btn.disabled = false;
                 btn.textContent = 'Iniciar Descanso';
-
-                // Vibração (mobile)
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                setTimeout(() => {
+                    if (display.textContent === 'VÁ!') {
+                        display.style.color = '';
+                        const restSec = ex?.rest_sec || 60;
+                        display.textContent = `${Math.floor(restSec / 60).toString().padStart(2, '0')}:${(restSec % 60).toString().padStart(2, '0')}`;
+                    }
+                }, 2000);
             }
         }, 1000);
     });
 
-    // Quick AI do Workout
+    // Quick AI do Workout ― 4: abre chat com contexto do exercício atual
     document.getElementById('quick-ai-trigger')?.addEventListener('click', () => {
         const ex = (window.todayExercises || [])[window.currentExIndex];
         if (ex) {

@@ -128,9 +128,17 @@ async function loadTodayWorkout() {
 }
 
 // ─── Execução de Treino ─────────────────────────────────────────────────────
-function updateExerciseDisplay() {
+async function updateExerciseDisplay() {
+    const container = document.querySelector('.workout-container');
     const exs = window.todayExercises || [];
     if (!exs.length) return;
+
+    // Efeito de Transição Suave
+    if (container) {
+        container.style.opacity = '0';
+        container.style.transform = 'translateX(10px)';
+        await new Promise(r => setTimeout(r, 200));
+    }
 
     const ex = exs[window.currentExIndex];
     const total = exs.length;
@@ -148,17 +156,15 @@ function updateExerciseDisplay() {
     if (stats[1]) stats[1].textContent = ex.reps || '--';
     if (stats[2]) stats[2].textContent = ex.rest_sec ? `${ex.rest_sec}s` : '--';
 
-    // Preview do próximo exercício (discreet strip)
+    // Preview do próximo
     const nextEx = exs[window.currentExIndex + 1];
     const preview = document.getElementById('next-ex-preview');
-    if (nextEx && preview) {
-        preview.style.display = 'block';
-        document.getElementById('next-ex-name').textContent = nextEx.name || '';
-        document.getElementById('next-ex-info').textContent =
-            nextEx.sets && nextEx.reps ? `${nextEx.sets}×${nextEx.reps}` : '';
-    } else if (preview) {
-        // Último exercício
-        preview.style.display = skippedIndexes.length > 0 ? 'none' : 'none';
+    if (nextEx) {
+        document.getElementById('next-ex-name').textContent = nextEx.name;
+        document.getElementById('next-ex-info').textContent = `${nextEx.sets}x${nextEx.reps}`;
+        if (preview) preview.style.display = 'block';
+    } else {
+        if (preview) preview.style.display = 'none';
     }
 
     // Banner de pulados

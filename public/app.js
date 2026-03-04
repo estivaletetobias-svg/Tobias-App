@@ -165,60 +165,27 @@ async function sendChatMessage() {
     const message = input?.value?.trim();
     if (!message) return;
 
-    // Mostrar mensagem do usuário
     appendMessage(message, 'user');
     input.value = '';
 
-    // Indicador de typing
     const typingEl = appendMessage('●●●', 'ai typing');
 
     try {
-        // Chamada streaming ao backend
-        const response = await fetch(`${API_BASE}/api/chat`, {
+        const result = await apiFetch('/api/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`,
-            },
             body: JSON.stringify({ message }),
         });
 
         typingEl.remove();
 
-        if (!response.ok) {
-            const errData = await response.json();
-            appendMessage(`Erro: ${errData.error}`, 'ai');
+        if (!result.success) {
+            appendMessage(`Erro: ${result.error}`, 'ai');
             return;
         }
 
-        // Processar stream
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        const aiEl = appendMessage('', 'ai');
-        let fullText = '';
+        appendMessage(result.data.text, 'ai');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    if (data === '[DONE]') break;
-                    try {
-                        const parsed = JSON.parse(data);
-                        if (parsed.text) {
-                            fullText += parsed.text;
-                            aiEl.textContent = fullText;
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                        }
-                    } catch { }
-                }
-            }
-        }
     } catch (e) {
         typingEl?.remove();
         appendMessage('Ops! Problema de conexão. Tente novamente.', 'ai');

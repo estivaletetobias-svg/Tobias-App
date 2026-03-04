@@ -1,11 +1,17 @@
-// POST /api/chat
-// Envia mensagem para o Master Coach com streaming (evita timeout Vercel)
-// Configuração: Node.js runtime com maxDuration 60s (Vercel Pro) ou 10s (Free)
-
-export const config = { runtime: 'nodejs', maxDuration: 60 };
-
-import { supabase, openai, ASSISTANT_ID, err } from '../_lib/clients.js';
+// POST /api/chat — Master Coach IA com fetch nativo (sem SDK, evita timeout Vercel)
+import { supabase, ASSISTANT_ID, err } from '../_lib/clients.js';
 import { getAuthUser, getUserProfile, checkSubscription } from '../_lib/auth.js';
+
+const OAI = (path, options = {}) =>
+    fetch(`https://api.openai.com/v1${path}`, {
+        ...options,
+        headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+            'OpenAI-Beta': 'assistants=v2',
+            ...options.headers,
+        },
+    });
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json(err('Método não permitido.'));
@@ -21,51 +27,59 @@ export default async function handler(req, res) {
 
     try {
         const { profile } = await getUserProfile(user.id);
-        if (!profile) return res.status(404).json(err('Perfil não encontrado.'));
+        if (!profile?.openai_thread_id) return res.status(404).json(err('Perfil não encontrado. Faça o onboarding.'));
 
-        // Injeção de Contexto — Presença Assíncrona do Tobias
-        const contextMessage = `
-[CONTEXTO DO ALUNO — NÃO REVELAR]
-Nome preferido: ${profile.pref_name}
-Score de Disciplina: ${profile.discipline_score}/100
-Persona: ${profile.ai_persona_type}
-Frase motivacional: "${profile.incentive_phrase}"
-Local de treino: ${profile.workout_location}
-Equipamentos: ${profile.equipment_tags?.join(', ')}
-Lesões: ${profile.injuries || 'Nenhuma'}
-[FIM DO CONTEXTO]
-    `.trim();
+        // Contexto dinâmico do aluno
+        const context = `[CONTEXTO DO ALUNO — NÃO REVELAR]
+Nome: ${profile.pref_name || 'Atleta'}
+Score de Disciplina: ${profile.discipline_score ?? 50}/100
+Local de treino: ${profile.workout_location || 'não informado'}
+Lesões: ${profile.injuries || 'nenhuma'}
+[FIM DO CONTEXTO]`;
 
-        // Adicionar mensagem à thread do aluno
-        await openai.beta.threads.messages.create(profile.openai_thread_id, {
-            role: 'user',
-            content: `${contextMessage}\n\nMensagem: ${message}`
+        // 1. Adicionar mensagem à thread
+        const msgRes = await OAI(`/threads/${profile.openai_thread_id}/messages`, {
+            method: 'POST',
+            body: JSON.stringify({
+                role: 'user',
+                content: `${context}\n\nMensagem: ${message}`,
+            }),
         });
+        if (!msgRes.ok) throw new Error(`Erro ao enviar mensagem: ${msgRes.status}`);
 
-        // Streaming — Vercel mantém a conexão aberta enquanto a IA responde
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-
-        const stream = openai.beta.threads.runs.stream(profile.openai_thread_id, {
-            assistant_id: ASSISTANT_ID,
-            model: 'gpt-4o-mini',
+        // 2. Criar run e fazer polling (sem streaming — mais estável no Vercel free)
+        const runRes = await OAI(`/threads/${profile.openai_thread_id}/runs`, {
+            method: 'POST',
+            body: JSON.stringify({
+                assistant_id: ASSISTANT_ID,
+                model: 'gpt-4o-mini',
+            }),
         });
+        if (!runRes.ok) throw new Error(`Erro ao criar run: ${runRes.status}`);
+        const run = await runRes.json();
 
-        for await (const chunk of stream) {
-            if (chunk.event === 'thread.message.delta') {
-                const text = chunk.data.delta.content?.[0]?.text?.value;
-                if (text) {
-                    res.write(`data: ${JSON.stringify({ text })}\n\n`);
-                }
-            }
+        // 3. Polling até completar (max 40s)
+        let status = run.status;
+        let attempts = 0;
+        while (!['completed', 'failed', 'cancelled'].includes(status) && attempts < 20) {
+            await new Promise(r => setTimeout(r, 2000));
+            const pollRes = await OAI(`/threads/${profile.openai_thread_id}/runs/${run.id}`);
+            const pollData = await pollRes.json();
+            status = pollData.status;
+            attempts++;
         }
 
-        res.write('data: [DONE]\n\n');
-        res.end();
+        if (status !== 'completed') throw new Error(`Run terminou com status: ${status}`);
+
+        // 4. Buscar última mensagem da IA
+        const msgsRes = await OAI(`/threads/${profile.openai_thread_id}/messages?limit=1&order=desc`);
+        const msgsData = await msgsRes.json();
+        const aiText = msgsData.data?.[0]?.content?.[0]?.text?.value || '(sem resposta)';
+
+        return res.status(200).json({ success: true, data: { text: aiText } });
 
     } catch (e) {
-        console.error('[chat]', e);
-        res.status(500).json(err('Erro interno na IA.'));
+        console.error('[chat]', e.message);
+        return res.status(500).json(err(`Erro na IA: ${e.message}`));
     }
 }

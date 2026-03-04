@@ -141,6 +141,16 @@ body {
     transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
 }
 
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5%;
+    width: 90%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+}
+
 .glass-card:hover {
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
 }
@@ -169,7 +179,7 @@ body {
 .circle-bg {
     fill: none;
     stroke: rgba(0, 0, 0, 0.03);
-    stroke-width: 2.8;
+    stroke-width: 2.2;
 }
 
 .circle {
@@ -185,18 +195,18 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 40px;
-    font-weight: 700;
+    font-size: 48px;
+    font-weight: 300;
     color: var(--text-main);
-    text-shadow: 0 0 20px var(--accent-glow);
+    letter-spacing: -2px;
 }
 
 .circle {
     fill: none;
-    stroke: var(--accent);
-    stroke-width: 2.8;
+    stroke: url(#silverGradient);
+    stroke-width: 2.2;
     stroke-linecap: round;
-    filter: drop-shadow(0 0 8px var(--accent));
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.05));
     animation: progress 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 

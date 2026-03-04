@@ -45,7 +45,8 @@ export default async function handler(req, res) {
                 equipment_tags, ai_persona_type,
                 incentive_phrase, diet_status,
                 openai_thread_id: thread.id,
-                discipline_score: 50
+                discipline_score: 50,
+                is_active: true   // ← ativa acesso ao completar onboarding
             });
 
         if (dbError) return res.status(500).json(err(`Supabase: ${dbError.message}`));

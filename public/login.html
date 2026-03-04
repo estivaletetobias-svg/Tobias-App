@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Personal Coach | Acesso</title>
+    <link rel="stylesheet" href="login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="aura-bg"></div>
+
+    <div class="auth-wrapper">
+        <!-- Logo -->
+        <div class="brand">
+            <div class="brand-logo">IA</div>
+            <p class="brand-sub">Personal Coach</p>
+        </div>
+
+        <!-- Card de Auth -->
+        <div class="auth-card glass-card">
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+                <button class="tab" id="tab-signup" onclick="switchTab('signup')">Criar Conta</button>
+            </div>
+
+            <!-- Mensagem de feedback -->
+            <div class="feedback-msg" id="feedback" style="display:none"></div>
+
+            <!-- LOGIN -->
+            <form id="form-login" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label>E-mail</label>
+                    <input type="email" id="login-email" placeholder="seu@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <div class="pass-wrap">
+                        <input type="password" id="login-password" placeholder="Sua senha" required>
+                        <span class="eye-toggle" onclick="togglePass('login-password', this)">👁</span>
+                    </div>
+                </div>
+                <button type="submit" class="aura-btn" id="btn-login">
+                    <span class="btn-text">Entrar no Sistema</span>
+                    <span class="btn-loader" style="display:none">●●●</span>
+                </button>
+                <p class="forgot-link" onclick="switchTab('forgot')">Esqueci minha senha</p>
+            </form>
+
+            <!-- CADASTRO -->
+            <form id="form-signup" class="auth-form hidden" onsubmit="handleSignup(event)">
+                <div class="input-group">
+                    <label>Nome completo</label>
+                    <input type="text" id="signup-name" placeholder="Seu nome" required>
+                </div>
+                <div class="input-group">
+                    <label>E-mail</label>
+                    <input type="email" id="signup-email" placeholder="seu@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <div class="pass-wrap">
+                        <input type="password" id="signup-password" placeholder="Mínimo 8 caracteres" required
+                            minlength="8">
+                        <span class="eye-toggle" onclick="togglePass('signup-password', this)">👁</span>
+                    </div>
+                </div>
+                <button type="submit" class="aura-btn" id="btn-signup">
+                    <span class="btn-text">Criar Minha Conta</span>
+                    <span class="btn-loader" style="display:none">●●●</span>
+                </button>
+            </form>
+
+            <!-- ESQUECI SENHA -->
+            <form id="form-forgot" class="auth-form hidden" onsubmit="handleForgot(event)">
+                <p class="forgot-desc">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
+                <div class="input-group">
+                    <label>E-mail</label>
+                    <input type="email" id="forgot-email" placeholder="seu@email.com" required>
+                </div>
+                <button type="submit" class="aura-btn" id="btn-forgot">
+                    <span class="btn-text">Enviar Link</span>
+                    <span class="btn-loader" style="display:none">●●●</span>
+                </button>
+                <p class="forgot-link" onclick="switchTab('login')">← Voltar para o Login</p>
+            </form>
+
+        </div>
+
+        <p class="footer-note">© IA Personal Coach by Tobias Estivalete</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="login.js"></script>
+</body>
+
+</html>

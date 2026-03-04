@@ -1,0 +1,510 @@
+:root {
+    --bg-primary: #f5f5f7;
+    --glass-bg: rgba(255, 255, 255, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --text-main: #1d1d1f;
+    --text-sec: #86868b;
+    --accent-silver: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+    --aura-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background: var(--bg-primary);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.aura-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at 20% 20%, #ffffff 0%, #f0f0f5 50%, #e8e8f0 100%);
+}
+
+/* Nav */
+.top-nav {
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -1px;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-silver);
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* App Container */
+.app-container {
+    padding: 24px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Glass Cards */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: var(--aura-glow);
+    margin-bottom: 24px;
+}
+
+.discipline-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.score-circle {
+    width: 150px;
+    height: 150px;
+    position: relative;
+    margin: 20px 0;
+}
+
+.circular-chart {
+    display: block;
+    margin: 10px auto;
+    max-width: 100%;
+    max-height: 250px;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.05);
+    stroke-width: 2.8;
+}
+
+.circle {
+    fill: none;
+    stroke: #1d1d1f;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    animation: progress 1s ease-out forwards;
+}
+
+.percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    font-weight: 600;
+}
+
+@keyframes progress {
+    0% {
+        stroke-dasharray: 0 100;
+    }
+}
+
+.badge {
+    background: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Next Workout */
+.next-workout h2 {
+    font-size: 28px;
+    margin: 12px 0 4px 0;
+}
+
+.next-workout p {
+    color: var(--text-sec);
+    margin-bottom: 24px;
+}
+
+.aura-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: #1d1d1f;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.aura-btn:active {
+    transform: scale(0.98);
+}
+
+/* AI Bubble */
+.chat-bubble {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-radius: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    z-index: 100;
+}
+
+/* Chat Overlay */
+.chat-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    display: none;
+    z-index: 1000;
+    padding: 24px;
+}
+
+.chat-window {
+    height: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.chat-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.msg {
+    padding: 12px 16px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    max-width: 80%;
+}
+
+.ai {
+    background: rgba(0, 0, 0, 0.05);
+    align-self: flex-start;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Onboarding Specific */
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.onboarding-overlay.active {
+    display: flex;
+}
+
+.onboarding-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.onboarding-step {
+    display: none;
+    animation: fadeInSlide 0.5s ease forwards;
+}
+
+.onboarding-step.active {
+    display: block;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.aura-center {
+    text-align: center;
+}
+
+.logo.large {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-sec);
+    margin-bottom: 8px;
+}
+
+.input-group input,
+.input-group textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+}
+
+.input-row {
+    display: flex;
+    gap: 16px;
+}
+
+.option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.option-card {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+
+.option-card.selected {
+    border-color: #1d1d1f;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.check-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 16px;
+    border-radius: 16px;
+}
+
+.signature-pad {
+    height: 150px;
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sec);
+    margin: 24px 0;
+}
+
+/* Workout Execution */
+.workout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    z-index: 1500;
+    display: none;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.workout-container {
+    max-width: 500px;
+    margin: 0 auto;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.workout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.exercise-count {
+    font-size: 14px;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.video-placeholder {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sec);
+    margin-bottom: 24px;
+    border: 1px solid var(--glass-border);
+}
+
+.exercise-info h2 {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.workout-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 32px 0;
+}
+
+.stat-item {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.stat-item .label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-sec);
+    margin-bottom: 4px;
+}
+
+.stat-item .value {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.timer-section {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.timer-display {
+    font-size: 48px;
+    font-weight: 300;
+    margin-bottom: 12px;
+    color: #1d1d1f;
+}
+
+.timer-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.workout-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.aura-btn.secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+.quick-ai-help {
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.mini-bubble {
+    background: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}

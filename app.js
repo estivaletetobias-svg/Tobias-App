@@ -71,18 +71,17 @@ async function apiFetch(path, options = {}) {
     return res.json();
 }
 
-// ─── Onboarding via IA ────────────────────────────────────────────────────
+// ─── Onboarding: primeiro acesso sem perfil ────────────────────────────────
 window.startWithAI = async function () {
-    const name = document.getElementById('pref-name')?.value?.trim();
-    if (!name) {
-        document.getElementById('pref-name').style.borderColor = 'red';
-        return;
-    }
-
     const btn = document.getElementById('btn-start-ai');
     if (btn) { btn.disabled = true; btn.textContent = 'Conectando...'; }
 
-    // Salvar nome + criar thread OpenAI
+    // Usar nome do login — sem perguntar de novo
+    const name = currentUser.user_metadata?.full_name?.split(' ')[0]
+        || currentUser.email?.split('@')[0]
+        || 'Atleta';
+
+    // Criar thread OpenAI e salvar perfil
     const result = await apiFetch('/api/onboarding', {
         method: 'POST',
         body: JSON.stringify({ pref_name: name })
@@ -101,23 +100,9 @@ window.startWithAI = async function () {
     const nameEl = document.querySelector('.user-profile strong');
     if (nameEl) nameEl.textContent = name;
 
-    // Abrir chat e limpar mensagem genérica
-    const chatOverlay = document.getElementById('chat-overlay');
-    chatOverlay.style.display = 'block';
-    const msgs = document.getElementById('chat-messages');
-    if (msgs) msgs.innerHTML = '';
-
-    // IA inicia o diagnóstico conversacional
-    appendMessage(
-        `Olá, ${name}! Sou seu Master Coach IA.\n\nA partir de agora, vou criar um programa 100% personalizado pra você. Para isso, quero te conhecer de verdade.\n\nMe conta: qual é o seu principal objetivo hoje? Perder gordura, ganhar massa, melhorar condicionamento… ou tem outro foco?`,
-        'ai'
-    );
-};
-
-// ─── (mantida para compatibilidade — não é mais usada no fluxo principal)
-window.finishOnboarding = async function () {
-    const pref_name = document.getElementById('pref-name')?.value || 'Atleta';
-    await startWithAI();
+    // Abrir chat com greeting real da IA
+    document.getElementById('chat-overlay').style.display = 'block';
+    await loadChatHistory();
 };
 
 
@@ -193,34 +178,38 @@ async function sendChatMessage() {
     }
 }
 
-// ─── Carregar Histórico do Chat ───────────────────────────────────────────
 async function loadChatHistory() {
     const msgs = document.getElementById('chat-messages');
     if (!msgs) return;
 
-    // Limpar mensagem genérica do HTML
-    msgs.innerHTML = '<div class="msg ai typing">Carregando histórico...</div>';
+    msgs.innerHTML = '<div class="msg ai typing">...</div>';
 
     try {
         const result = await apiFetch('/api/chat/history');
         msgs.innerHTML = '';
 
         if (result.success && result.data.messages.length > 0) {
+            // Mostrar histórico real da thread
             for (const m of result.data.messages) {
                 const type = m.role === 'assistant' ? 'ai' : 'user';
                 appendMessage(m.text, type);
             }
         } else {
-            // Primeira vez abrindo o chat — mostrar saudação
-            const name = document.querySelector('.user-profile strong')?.textContent || 'Atleta';
-            appendMessage(
-                `Olá, ${name}! Sou seu Master Coach IA. Como posso te ajudar hoje?`,
-                'ai'
-            );
+            // Primeira conversa: pedir à IA um greeting real via API
+            const greeting = await apiFetch('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({ message: '__init__' }),
+            });
+            if (greeting.success) {
+                appendMessage(greeting.data.text, 'ai');
+            } else {
+                const name = document.querySelector('.user-profile strong')?.textContent || 'Atleta';
+                appendMessage(`Olá, ${name}! Pronto para treinar? Me conta como está hoje.`, 'ai');
+            }
         }
     } catch (e) {
         msgs.innerHTML = '';
-        appendMessage('Não foi possível carregar o histórico. Pode falar normalmente!', 'ai');
+        appendMessage('Pronto! Pode falar.', 'ai');
     }
 }
 

@@ -12,20 +12,15 @@
 <body>
     <div class="aura-bg"></div>
 
-    <!-- Onboarding: 1 passo — o rest o a IA faz via chat -->
+    <!-- Onboarding: ativado apenas no primeiro acesso -->
     <div id="onboarding-overlay" class="onboarding-overlay active">
         <div class="onboarding-container">
             <div class="onboarding-step active" data-step="1">
                 <div class="glass-card aura-center">
                     <div class="logo large">IA</div>
                     <h1>Bem-vindo ao<br>IA Personal Coach</h1>
-                    <p style="margin-bottom:24px">Seu Master Coach pessoal está pronto.<br>Como você prefere ser
-                        chamado?</p>
-                    <div class="input-group" style="text-align:left;margin-bottom:20px">
-                        <label>Seu nome</label>
-                        <input type="text" id="pref-name" placeholder="Ex: Tobias" autocomplete="given-name">
-                    </div>
-                    <button class="aura-btn" onclick="startWithAI()" id="btn-start-ai">Iniciar com o Coach ✶</button>
+                    <p style="margin-bottom:32px">Seu Master Coach pessoal está pronto.<br>Clique para começar.</p>
+                    <button class="aura-btn" onclick="startWithAI()" id="btn-start-ai">Falar com o Coach ✦</button>
                 </div>
             </div>
         </div>

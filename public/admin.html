@@ -727,6 +727,7 @@
           <td style="color:var(--muted);font-size:13px">${c.workout_location}</td>
           <td>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button onclick="viewHistory('${c.id}','${c.name}')" style="background:rgba(124,106,255,.15);color:#7c6aff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Histórico</button>
               <button onclick="toggleActive('${c.id}',${!c.is_active})" style="background:${c.is_active ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.15)'};color:${c.is_active ? 'var(--red)' : 'var(--green)'};border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">${c.is_active ? 'Desativar' : 'Ativar'}</button>
               <button onclick="deleteUser('${c.id}','${c.name}')" style="background:rgba(239,68,68,.1);color:var(--red);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Deletar</button>
             </div>
@@ -774,6 +775,62 @@
             } else {
                 alert('Erro ao deletar usuário.');
             }
+        }
+        async function viewHistory(userId, name) {
+            // Criar modal de histórico
+            let modal = document.getElementById('history-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'history-modal';
+                modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center';
+                modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+                document.body.appendChild(modal);
+            }
+            modal.innerHTML = `
+                <div style="background:#141414;border:1px solid #2a2a2a;border-radius:16px;width:90%;max-width:560px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+                    <div style="padding:20px 24px;border-bottom:1px solid #1e1e1e;display:flex;justify-content:space-between;align-items:center">
+                        <h3 style="margin:0;color:#fff;font-size:16px">📊 Histórico — ${name}</h3>
+                        <button onclick="document.getElementById('history-modal').remove()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer">×</button>
+                    </div>
+                    <div id="history-body" style="padding:20px 24px;overflow-y:auto;flex:1">
+                        <p style="color:#666">Carregando...</p>
+                    </div>
+                </div>`;
+
+            // Buscar logs diretamente no Supabase via API admin
+            const res = await fetch(`/api/admin/history?user_id=${userId}`, {
+                headers: { 'x-admin-secret': adminSecret }
+            });
+            const json = await res.json();
+            const body = document.getElementById('history-body');
+
+            if (!json.success || !json.data.logs?.length) {
+                body.innerHTML = '<p style="color:#666;text-align:center;padding:24px 0">Nenhum treino registrado ainda.</p>';
+                return;
+            }
+
+            body.innerHTML = json.data.logs.map((log, i) => {
+                const d = new Date(log.completed_at);
+                const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const effort = log.perceived_effort;
+                const effortColor = effort >= 8 ? '#ef4444' : effort >= 5 ? '#f59e0b' : '#22c55e';
+                return `
+                <div style="padding:14px;border:1px solid #1e1e1e;border-radius:10px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">
+                    <div style="background:#1e1e1e;border-radius:8px;padding:8px 12px;text-align:center;min-width:52px">
+                        <div style="font-size:18px;font-weight:700;color:#fff">${d.getDate()}</div>
+                        <div style="font-size:10px;color:#666;text-transform:uppercase">${d.toLocaleDateString('pt-BR', { month: 'short' })}</div>
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-weight:600;color:#fff;font-size:14px;margin-bottom:4px">${log.workout_name || 'Treino'}</div>
+                        <div style="font-size:12px;color:#666">${timeStr}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:12px;color:#666;margin-bottom:2px">Esforço</div>
+                        <div style="font-size:18px;font-weight:700;color:${effortColor}">${effort}/10</div>
+                    </div>
+                </div>`;
+            }).join('');
         }
     </script>
 </body>

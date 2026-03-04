@@ -262,9 +262,9 @@ function injectStartSessionButton(msgEl) {
         btn.textContent = '⏳ Carregando treino...';
         btn.disabled = true;
         try {
-            // Primeiro: tentar parsear o treino da mensagem da IA (mesmo treino prescrito!)
-            const msgText = btn.closest('.msg')?.innerText || '';
-            const parsed = parseWorkoutFromAIText(msgText);
+            // Primeiro: parsear o treino do texto RAW da mensagem (antes do markdown)
+            const rawText = btn.closest('.msg')?.dataset.rawText || '';
+            const parsed = rawText ? parseWorkoutFromAIText(rawText) : null;
 
             if (parsed && parsed.length >= 2) {
                 // Usar exercícios diretamente do chat (same as IA prescribed)
@@ -320,6 +320,8 @@ async function sendChatMessage() {
 
         // ― 3: Detectar treino e mostrar botão de sessão
         if (detectWorkoutInMessage(result.data.text)) {
+            // Guardar texto RAW antes do markdown ser renderizado, para o parser funcionar
+            msgEl.dataset.rawText = result.data.text;
             injectStartSessionButton(msgEl);
         }
 
@@ -528,16 +530,11 @@ function initEventListeners() {
         }, 1000);
     });
 
-    // Quick AI do Workout ― 4: abre chat com contexto do exercício atual
-    document.getElementById('quick-ai-trigger')?.addEventListener('click', () => {
-        const ex = (window.todayExercises || [])[window.currentExIndex];
-        if (ex) {
-            const input = document.querySelector('.chat-input-area input');
-            if (input) {
-                input.value = `Tenho uma dúvida sobre o exercício ${ex.name}. `;
-                input.focus();
-            }
-        }
+
+    // Quick AI do Workout — abre o mini drawer
+    document.getElementById('quick-ai-trigger')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.toggleMiniAI) window.toggleMiniAI();
     });
 }
 

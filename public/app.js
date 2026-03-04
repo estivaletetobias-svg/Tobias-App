@@ -303,22 +303,37 @@ async function loadChatHistory() {
         msgs.innerHTML = '';
 
         if (result.success && result.data.messages.length > 0) {
-            // Mostrar histórico real da thread
-            for (const m of result.data.messages) {
+            // Mostrar apenas as últimas 6 mensagens (sessão mais recente)
+            // O thread completo fica na OpenAI — a IA lembra de tudo
+            const recent = result.data.messages.slice(-6);
+            for (const m of recent) {
                 const type = m.role === 'assistant' ? 'ai' : 'user';
                 appendMessage(m.text, type);
             }
-        } else {
-            // Primeira conversa: pedir à IA um greeting real via API
+
+            // Saudação do dia — a IA pega o contexto e cumprimenta com base em hoje
+            const typing = appendMessage('●●●', 'ai typing');
             const greeting = await apiFetch('/api/chat', {
                 method: 'POST',
                 body: JSON.stringify({ message: '__init__' }),
             });
+            typing.remove();
+            if (greeting.success) {
+                appendMessage(greeting.data.text, 'ai');
+            }
+
+        } else {
+            // Primeiro acesso: IA inicia o diagnóstico
+            const typing = appendMessage('●●●', 'ai typing');
+            const greeting = await apiFetch('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({ message: '__init__' }),
+            });
+            typing.remove();
             if (greeting.success) {
                 appendMessage(greeting.data.text, 'ai');
             } else {
-                const name = document.querySelector('.user-profile strong')?.textContent || 'Atleta';
-                appendMessage(`Olá, ${name}! Pronto para treinar? Me conta como está hoje.`, 'ai');
+                appendMessage('Pronto! Pode falar.', 'ai');
             }
         }
     } catch (e) {

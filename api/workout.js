@@ -1,6 +1,17 @@
 // /api/workout — GET: treino do dia | POST: registrar treino
-import { supabase, openai, ok, err } from '../_lib/clients.js';
+// Usa fetch nativo (sem SDK) para evitar timeout no Vercel Hobby
+import { supabase, ok, err } from '../_lib/clients.js';
 import { getAuthUser, getUserProfile, checkSubscription } from '../_lib/auth.js';
+
+const OAI = (path, options = {}) =>
+    fetch(`https://api.openai.com/v1${path}`, {
+        ...options,
+        headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+    });
 
 export default async function handler(req, res) {
     const { user, error: authError } = await getAuthUser(req);
@@ -15,14 +26,13 @@ export default async function handler(req, res) {
             const { profile } = await getUserProfile(user.id);
             if (!profile) return res.status(404).json(err('Perfil não encontrado.'));
 
-            const prompt = `
-Gere um treino para hoje para ${profile.pref_name}.
-- Equipamentos: ${profile.equipment_tags?.join(', ') || 'academia completa'}
+            const prompt = `Gere um treino para hoje para ${profile.pref_name || 'o aluno'}.
 - Local: ${profile.workout_location || 'academia'}
-- Restrições: ${profile.injuries || 'Nenhuma'}
-- Score de Disciplina: ${profile.discipline_score}/100
+- Equipamentos: ${profile.equipment_tags?.join(', ') || 'academia completa'}
+- Restrições: ${profile.injuries || 'nenhuma'}
+- Score de Disciplina: ${profile.discipline_score || 50}/100
 
-Retorne APENAS um JSON com este formato:
+Retorne APENAS um JSON válido com este formato exato:
 {
   "workout_name": "nome do treino",
   "duration_min": 60,
@@ -30,19 +40,30 @@ Retorne APENAS um JSON com este formato:
   "exercises": [
     { "name": "nome", "sets": 4, "reps": "10-12", "rest_sec": 60, "cues": "dica técnica" }
   ]
-}`.trim();
+}`;
 
-            const completion = await openai.chat.completions.create({
-                model: 'gpt-4o-mini',
-                messages: [{ role: 'user', content: prompt }],
-                response_format: { type: 'json_object' }
+            const r = await OAI('/chat/completions', {
+                method: 'POST',
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    response_format: { type: 'json_object' },
+                    max_tokens: 1000,
+                }),
             });
 
-            const workout = JSON.parse(completion.choices[0].message.content);
+            if (!r.ok) {
+                const errData = await r.json();
+                throw new Error(`OpenAI ${r.status}: ${errData.error?.message || 'falha'}`);
+            }
+
+            const data = await r.json();
+            const workout = JSON.parse(data.choices[0].message.content);
             return res.status(200).json(ok(workout));
+
         } catch (e) {
-            console.error('[workout GET]', e);
-            return res.status(500).json(err('Falha ao gerar treino.'));
+            console.error('[workout GET]', e.message);
+            return res.status(500).json(err(`Falha ao gerar treino: ${e.message}`));
         }
     }
 
@@ -56,14 +77,14 @@ Retorne APENAS um JSON com este formato:
                 .from('workout_logs')
                 .select('id')
                 .eq('user_id', user.id)
-                .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+                .gte('logged_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
             const newScore = Math.min(100, Math.round(((logs?.length || 0) / 30) * 100));
             await supabase.from('profiles').update({ discipline_score: newScore }).eq('id', user.id);
 
             return res.status(200).json(ok({ discipline_score: newScore, message: 'Treino registrado!' }));
         } catch (e) {
-            console.error('[workout POST]', e);
+            console.error('[workout POST]', e.message);
             return res.status(500).json(err('Falha ao registrar treino.'));
         }
     }

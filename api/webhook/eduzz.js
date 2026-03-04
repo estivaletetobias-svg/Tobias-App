@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     //  Eventos que ATIVAM o acesso:
     const ACTIVE_EVENTS = [
         'myeduzz.contract_created',   // assinatura criada
-        'myeduzz.invoice_paid',       // fatura paga
+        'myeduzz.invoice_paid',       // fatura paga / renovação mensal
+        'myeduzz.contract_updated',   // contrato atualizado (reativação pós-suspensão)
         'sale_approved',              // venda aprovada (legado)
     ];
 

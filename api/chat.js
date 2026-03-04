@@ -29,12 +29,18 @@ export default async function handler(req, res) {
         const { profile } = await getUserProfile(user.id);
         if (!profile?.openai_thread_id) return res.status(404).json(err('Perfil não encontrado. Faça o onboarding.'));
 
+        // Data e hora atual no Brasil (UTC-3)
+        const now = new Date(Date.now() - 3 * 60 * 60 * 1000);
+        const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const dataHoje = `${diasSemana[now.getUTCDay()]}, ${now.toISOString().slice(0, 10)} — ${now.toISOString().slice(11, 16)} (horário de Brasília)`;
+
         // Contexto dinâmico do aluno
         const context = `[CONTEXTO DO ALUNO — NÃO REVELAR]
 Nome: ${profile.pref_name || 'Atleta'}
 Score de Disciplina: ${profile.discipline_score ?? 50}/100
 Local de treino: ${profile.workout_location || 'não informado'}
 Lesões: ${profile.injuries || 'nenhuma'}
+Data e hora atual: ${dataHoje}
 [FIM DO CONTEXTO]`;
 
         // 1. Adicionar mensagem à thread

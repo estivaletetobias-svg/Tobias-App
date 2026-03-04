@@ -165,43 +165,49 @@
         </div>
     </div>
 
-    <!-- YouTube Drawer -->
+    <!-- YouTube Drawer (link in-app) -->
     <div id="yt-drawer"
-        style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.85);align-items:flex-end">
+        style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:1100;background:rgba(0,0,0,.85)">
         <div
-            style="width:100%;max-width:600px;margin:0 auto;background:#111;border-radius:20px 20px 0 0;padding:16px;max-height:70vh;overflow:hidden">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                <span id="yt-exercise-name" style="font-weight:700;color:#fff;font-size:15px"></span>
+            style="position:absolute;bottom:0;left:0;right:0;max-width:600px;margin:0 auto;background:#111;border-radius:20px 20px 0 0;padding:24px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <span style="font-weight:700;color:#fff;font-size:16px">🎬 Execução</span>
                 <button onclick="closeVideoDrawer()"
-                    style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button>
+                    style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1">×</button>
             </div>
-            <iframe id="yt-iframe" src="" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen style="width:100%;height:220px;border-radius:12px;background:#000"></iframe>
-            <a id="yt-fallback-link" href="" target="_blank" rel="noopener"
-                style="display:block;margin-top:12px;text-align:center;color:#7c6aff;font-size:13px;text-decoration:none">
-                🔗 Abrir no YouTube
-            </a>
+            <div style="background:#1a1a1a;border-radius:14px;padding:20px;text-align:center;margin-bottom:16px">
+                <div style="font-size:36px;margin-bottom:10px">🏋️</div>
+                <div id="yt-exercise-name" style="color:#fff;font-weight:700;font-size:18px;margin-bottom:6px"></div>
+                <div style="color:#666;font-size:13px;margin-bottom:20px">Clique para ver a execução correta</div>
+                <a id="yt-fallback-link" href="" target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:10px;background:#ff0000;color:#fff;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;font-family:Outfit,sans-serif">
+                    <span style="font-size:20px">▶</span> Assistir no YouTube
+                </a>
+            </div>
+            <p style="text-align:center;color:#444;font-size:11px">Abre o YouTube. Pressione voltar para retornar ao
+                treino.</p>
         </div>
     </div>
 
     <!-- Mini-IA Drawer -->
     <div id="mini-ai-drawer"
-        style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);align-items:flex-end">
-        <div style="width:100%;max-width:600px;margin:0 auto;background:#111;border-radius:20px 20px 0 0;padding:20px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:12px">
-                <span style="color:#fff;font-weight:700">✨ Pergunte ao Coach</span>
-                <button onclick="toggleMiniAI()"
-                    style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button>
+        style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:1100;background:rgba(0,0,0,.7)">
+        <div
+            style="position:absolute;bottom:0;left:0;right:0;max-width:600px;margin:0 auto;background:#111;border-radius:20px 20px 0 0;padding:24px;padding-bottom:32px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <span style="color:#fff;font-weight:700;font-size:16px">✨ Pergunte ao Coach</span>
+                <button onclick="window.toggleMiniAI && window.toggleMiniAI()"
+                    style="background:none;border:none;color:#999;font-size:28px;cursor:pointer;line-height:1;padding:0">×</button>
             </div>
             <div id="mini-ai-response"
-                style="color:#ccc;font-size:13px;margin-bottom:12px;min-height:40px;line-height:1.6"></div>
-            <div style="display:flex;gap:8px">
-                <input id="mini-ai-input" type="text" placeholder="Diga sua dúvida..." autocomplete="off"
-                    style="flex:1;padding:12px 14px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff;font-family:Outfit,sans-serif;font-size:13px;outline:none"
+                style="color:#bbb;font-size:14px;margin-bottom:16px;min-height:44px;line-height:1.7;padding:12px;background:#1a1a1a;border-radius:10px;display:none">
+            </div>
+            <div style="display:flex;gap:10px">
+                <input id="mini-ai-input" type="text" placeholder="Sua dúvida..." autocomplete="off"
+                    style="flex:1;padding:13px 16px;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:#fff;font-family:Outfit,sans-serif;font-size:14px;outline:none"
                     onkeydown="if(event.key==='Enter') sendMiniAI()">
                 <button onclick="sendMiniAI()"
-                    style="padding:12px 18px;border-radius:10px;background:#7c6aff;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">Enviar</button>
+                    style="padding:13px 20px;border-radius:12px;background:#7c6aff;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;font-size:14px;white-space:nowrap">Enviar</button>
             </div>
         </div>
     </div>

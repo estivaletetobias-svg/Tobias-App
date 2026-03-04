@@ -543,30 +543,38 @@ window.openVideoDrawer = function () {
     const name = window.currentExName || 'exercício';
     const query = encodeURIComponent(`${name} execução técnica`);
     const ytUrl = `https://www.youtube.com/results?search_query=${query}`;
-    // YouTube não permite embed de busca — abrir direto em nova aba
-    window.open(ytUrl, '_blank', 'noopener');
+    const drawer = document.getElementById('yt-drawer');
+    const nameEl = document.getElementById('yt-exercise-name');
+    const link = document.getElementById('yt-fallback-link');
+    if (nameEl) nameEl.textContent = name;
+    if (link) link.href = ytUrl;
+    if (drawer) drawer.style.display = 'block';
 };
 
 window.closeVideoDrawer = function () {
     const drawer = document.getElementById('yt-drawer');
-    const iframe = document.getElementById('yt-iframe');
-    if (iframe) iframe.src = ''; // para o vídeo
     if (drawer) drawer.style.display = 'none';
 };
 
-// ─── Mini-IA Drawer ───────────────────────────────────────────────────────
+// ─── Mini-IA Drawer ──────────────────────────────────────────────────────
 window.toggleMiniAI = function () {
     const drawer = document.getElementById('mini-ai-drawer');
     if (!drawer) return;
-    const isOpen = drawer.style.display === 'flex';
-    drawer.style.display = isOpen ? 'none' : 'flex';
+    const isOpen = drawer.style.display === 'block';
+    drawer.style.display = isOpen ? 'none' : 'block';
     if (!isOpen) {
+        // Aberto: pré-preencher input com exercício atual
         const input = document.getElementById('mini-ai-input');
         const response = document.getElementById('mini-ai-response');
         const ex = (window.todayExercises || [])[window.currentExIndex];
-        if (input) input.value = ex ? `Tenho uma dúvida sobre ${ex.name}: ` : '';
-        if (response) response.textContent = '';
-        setTimeout(() => input?.focus(), 100);
+        if (input) {
+            input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
+            setTimeout(() => input.focus(), 100);
+        }
+        if (response) {
+            response.style.display = 'none';
+            response.textContent = '';
+        }
     }
 };
 
@@ -576,7 +584,7 @@ window.sendMiniAI = async function () {
     const question = input?.value?.trim();
     if (!question) return;
 
-    if (response) response.textContent = '⏳ Aguarde...';
+    if (response) { response.textContent = '⏳ Aguarde...'; response.style.display = 'block'; }
     input.value = '';
 
     const result = await apiFetch('/api/chat', {
@@ -585,9 +593,10 @@ window.sendMiniAI = async function () {
     });
 
     if (result.success) {
-        if (response) response.textContent = result.data.text.substring(0, 300) + (result.data.text.length > 300 ? '...' : '');
+        const text = result.data.text;
+        if (response) { response.textContent = text.substring(0, 400) + (text.length > 400 ? '...' : ''); response.style.display = 'block'; }
     } else {
-        if (response) response.textContent = 'Erro ao consultar a IA.';
+        if (response) { response.textContent = 'Erro ao consultar a IA.'; response.style.display = 'block'; }
     }
 };
 

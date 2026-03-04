@@ -604,7 +604,13 @@ window.goToSkipped = function () {
 async function finishWorkoutSession() {
     const workoutName = document.querySelector('.next-workout h2')?.textContent || 'Treino do Dia';
 
-    // 1. Fechar overlay e mostrar modal IMEDIATAMENTE (antes da API)
+    // Montar resumo completo para a IA
+    const exercises = window.todayExercises || [];
+    const exercisesSummary = exercises.length
+        ? exercises.map(e => `${e.name} ${e.sets}x${e.reps}`).join(' | ')
+        : '';
+
+    // 1. Mostrar modal IMEDIATAMENTE
     document.getElementById('workout-overlay').style.display = 'none';
     const modal = document.getElementById('workout-complete-modal');
     const msgEl = document.getElementById('complete-msg');
@@ -613,11 +619,15 @@ async function finishWorkoutSession() {
     if (msgEl) msgEl.textContent = 'Registrando seu treino...';
     if (scoreDisplay) scoreDisplay.textContent = '';
 
-    // 2. Registrar no banco em background
+    // 2. Registrar no banco com todos os dados
     try {
         const result = await apiFetch('/api/workout', {
             method: 'POST',
-            body: JSON.stringify({ workout_name: workoutName, perceived_effort: 7 })
+            body: JSON.stringify({
+                workout_name: workoutName,
+                exercises_summary: exercisesSummary,
+                perceived_effort: 7
+            })
         });
 
         const newScore = result?.data?.discipline_score;

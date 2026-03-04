@@ -89,7 +89,12 @@ export default async function handler(req, res) {
                 ? logs.map(l => {
                     const d = new Date(l.completed_at);
                     const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-                    return `- ${l.workout_name || 'Treino'} em ${dateStr} (esforço: ${l.perceived_effort}/10)`;
+                    const parts = (l.workout_name || 'Treino').split(' | ');
+                    const name = parts[0];
+                    const exercises = parts.slice(1).join(' | ');
+                    return exercises
+                        ? `• ${dateStr}: ${name} (esforço ${l.perceived_effort}/10)\n  Exercícios: ${exercises}`
+                        : `• ${dateStr}: ${name} (esforço ${l.perceived_effort}/10)`;
                 }).join('\n')
                 : 'Nenhum treino registrado ainda.';
 

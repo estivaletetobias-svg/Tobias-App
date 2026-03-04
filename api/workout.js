@@ -69,11 +69,16 @@ Retorne APENAS um JSON válido com este formato exato:
 
     // POST — Registrar treino concluído
     if (req.method === 'POST') {
-        const { workout_name, perceived_effort } = req.body;
+        const { workout_name, perceived_effort, exercises_summary } = req.body;
         try {
+            // Salvar nome enriquecido com exercícios (para a IA ter contexto completo)
+            const richName = exercises_summary
+                ? `${workout_name || 'Treino do Dia'} | ${exercises_summary}`
+                : (workout_name || 'Treino do Dia');
+
             await supabase.from('workout_logs').insert({
                 user_id: user.id,
-                workout_name,
+                workout_name: richName,
                 perceived_effort
                 // completed_at é auto-preenchido pelo Supabase
             });

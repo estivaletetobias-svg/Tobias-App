@@ -193,6 +193,37 @@ async function sendChatMessage() {
     }
 }
 
+// ─── Carregar Histórico do Chat ───────────────────────────────────────────
+async function loadChatHistory() {
+    const msgs = document.getElementById('chat-messages');
+    if (!msgs) return;
+
+    // Limpar mensagem genérica do HTML
+    msgs.innerHTML = '<div class="msg ai typing">Carregando histórico...</div>';
+
+    try {
+        const result = await apiFetch('/api/chat/history');
+        msgs.innerHTML = '';
+
+        if (result.success && result.data.messages.length > 0) {
+            for (const m of result.data.messages) {
+                const type = m.role === 'assistant' ? 'ai' : 'user';
+                appendMessage(m.text, type);
+            }
+        } else {
+            // Primeira vez abrindo o chat — mostrar saudação
+            const name = document.querySelector('.user-profile strong')?.textContent || 'Atleta';
+            appendMessage(
+                `Olá, ${name}! Sou seu Master Coach IA. Como posso te ajudar hoje?`,
+                'ai'
+            );
+        }
+    } catch (e) {
+        msgs.innerHTML = '';
+        appendMessage('Não foi possível carregar o histórico. Pode falar normalmente!', 'ai');
+    }
+}
+
 function appendMessage(text, type) {
     const el = document.createElement('div');
     el.className = `msg ${type}`;
@@ -210,8 +241,10 @@ function appendMessage(text, type) {
 // ─── Event Listeners ───────────────────────────────────────────────────────
 function initEventListeners() {
     // Chat - abrir/fechar
-    document.getElementById('ai-trigger')?.addEventListener('click', () => {
-        document.getElementById('chat-overlay').style.display = 'block';
+    document.getElementById('ai-trigger')?.addEventListener('click', async () => {
+        const chatOverlay = document.getElementById('chat-overlay');
+        chatOverlay.style.display = 'block';
+        await loadChatHistory();
     });
     document.getElementById('close-chat')?.addEventListener('click', () => {
         document.getElementById('chat-overlay').style.display = 'none';

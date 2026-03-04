@@ -129,7 +129,26 @@
 
             <div class="workout-actions">
                 <button class="aura-btn secondary" id="prev-ex">Anterior</button>
-                <button class="aura-btn" id="next-ex">Próximo Exercício</button>
+                <button class="aura-btn skip-btn" id="skip-ex" title="Pular — volte depois">Pular →</button>
+                <button class="aura-btn" id="next-ex">Próximo ✔</button>
+            </div>
+
+            <!-- Preview do próximo exercício -->
+            <div id="next-ex-preview"
+                style="margin-top:12px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:none">
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;opacity:.4;margin-bottom:6px">A
+                    seguir</div>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                    <span id="next-ex-name" style="font-size:14px;font-weight:600;opacity:.8"></span>
+                    <span id="next-ex-info" style="font-size:12px;opacity:.4"></span>
+                </div>
+            </div>
+
+            <!-- Exercícios pulados -->
+            <div id="skipped-banner"
+                style="display:none;margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);font-size:12px;color:#f59e0b;cursor:pointer"
+                onclick="goToSkipped()">
+                ⚠️ Você pulou <span id="skipped-count">0</span> exercício(s). Clique para revisitar.
             </div>
 
             <div class="quick-ai-help" id="quick-ai-trigger">

@@ -131,8 +131,12 @@ function updateExerciseDisplay() {
 
     const ex = exs[window.currentExIndex];
     const total = exs.length;
+    const skippedIndexes = window.skippedIndexes || [];
 
-    document.querySelector('.exercise-count').textContent = `Exercício ${window.currentExIndex + 1} de ${total}`;
+    // Indicador de exercício atual (com badge se pulado)
+    const isSkipped = skippedIndexes.includes(window.currentExIndex);
+    document.querySelector('.exercise-count').textContent =
+        `Exercício ${window.currentExIndex + 1} de ${total}${isSkipped ? ' ⏩ pulado' : ''}`;
     document.getElementById('ex-name').textContent = ex.name || 'Exercício';
     document.getElementById('ex-desc').textContent = ex.cues || '';
 
@@ -140,6 +144,44 @@ function updateExerciseDisplay() {
     if (stats[0]) stats[0].textContent = ex.sets || '--';
     if (stats[1]) stats[1].textContent = ex.reps || '--';
     if (stats[2]) stats[2].textContent = ex.rest_sec ? `${ex.rest_sec}s` : '--';
+
+    // Preview do próximo exercício (discreet strip)
+    const nextEx = exs[window.currentExIndex + 1];
+    const preview = document.getElementById('next-ex-preview');
+    if (nextEx && preview) {
+        preview.style.display = 'block';
+        document.getElementById('next-ex-name').textContent = nextEx.name || '';
+        document.getElementById('next-ex-info').textContent =
+            nextEx.sets && nextEx.reps ? `${nextEx.sets}×${nextEx.reps}` : '';
+    } else if (preview) {
+        // Último exercício
+        preview.style.display = skippedIndexes.length > 0 ? 'none' : 'none';
+    }
+
+    // Banner de pulados
+    const banner = document.getElementById('skipped-banner');
+    const skippedCount = document.getElementById('skipped-count');
+    if (banner) {
+        const realSkipped = skippedIndexes.filter(i => i !== window.currentExIndex).length;
+        if (realSkipped > 0) {
+            banner.style.display = 'block';
+            skippedCount.textContent = realSkipped;
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    // Botoão Próximo vs Concluir
+    const nextBtn = document.getElementById('next-ex');
+    if (nextBtn) {
+        const allDone = exs.every((_, i) => !skippedIndexes.includes(i) || i === window.currentExIndex);
+        const isLast = window.currentExIndex === total - 1;
+        if (isLast && skippedIndexes.filter(i => i !== window.currentExIndex).length === 0) {
+            nextBtn.textContent = 'Concluir Treino ✓';
+        } else {
+            nextBtn.textContent = 'Próximo ✔';
+        }
+    }
 
     // ― 5: Link YouTube para o exercício atual
     const videoEl = document.querySelector('.video-placeholder');
@@ -329,10 +371,22 @@ function initEventListeners() {
         finishWorkoutSession();
     });
 
-    // Workout - navegação
+    // Workout ― navegação e pular
     document.getElementById('next-ex')?.addEventListener('click', () => {
         const exs = window.todayExercises || [];
+        const skipped = window.skippedIndexes || [];
+        const isLast = window.currentExIndex === exs.length - 1;
+        const hasRemainingSkipped = skipped.filter(i => i !== window.currentExIndex).length > 0;
+
+        if (isLast && !hasRemainingSkipped) {
+            // Concluir treino
+            document.getElementById('workout-overlay').style.display = 'none';
+            finishWorkoutSession();
+            return;
+        }
         if (window.currentExIndex < exs.length - 1) {
+            // Remover do skipped se estava pulado e agora foi feito
+            window.skippedIndexes = skipped.filter(i => i !== window.currentExIndex);
             window.currentExIndex++;
             updateExerciseDisplay();
         }
@@ -342,6 +396,22 @@ function initEventListeners() {
             window.currentExIndex--;
             updateExerciseDisplay();
         }
+    });
+    document.getElementById('skip-ex')?.addEventListener('click', () => {
+        const exs = window.todayExercises || [];
+        if (!window.skippedIndexes) window.skippedIndexes = [];
+        // Marcar como pulado
+        if (!window.skippedIndexes.includes(window.currentExIndex)) {
+            window.skippedIndexes.push(window.currentExIndex);
+        }
+        // Avançar para o próximo
+        if (window.currentExIndex < exs.length - 1) {
+            window.currentExIndex++;
+        } else {
+            // Já no último — ir para o primeiro pulado
+            window.currentExIndex = window.skippedIndexes[0];
+        }
+        updateExerciseDisplay();
     });
 
     // Timer de descanso ― 2: cores de alerta
@@ -404,6 +474,15 @@ function initEventListeners() {
 }
 
 // ─── Registrar Treino Concluído ─────────────────────────────────────────────
+// Ir para o primeiro exercício pulado
+window.goToSkipped = function () {
+    const skipped = window.skippedIndexes || [];
+    if (skipped.length > 0) {
+        window.currentExIndex = skipped[0];
+        updateExerciseDisplay();
+    }
+};
+
 async function finishWorkoutSession() {
     const ex = window.todayExercises?.[0];
     if (!ex) return;

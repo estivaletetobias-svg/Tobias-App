@@ -239,29 +239,34 @@ function injectStartSessionButton(msgEl) {
     const btn = document.createElement('button');
     btn.className = 'start-session-btn';
     btn.innerHTML = '▶ Iniciar Sessão de Treino';
-    btn.style.cssText = 'display:block;width:100%;margin-top:14px;padding:12px 16px;background:linear-gradient(135deg,#7c6aff,#4fc8ff);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:Outfit,sans-serif;letter-spacing:.5px;transition:opacity .2s';
+    btn.style.cssText = 'display:block;width:100%;margin-top:14px;padding:12px 16px;background:linear-gradient(135deg,#7c6aff,#4fc8ff);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:Outfit,sans-serif;letter-spacing:.5px;transition:opacity .2s;pointer-events:all;position:relative;z-index:10';
     btn.onmouseenter = () => btn.style.opacity = '.85';
     btn.onmouseleave = () => btn.style.opacity = '1';
     btn.addEventListener('click', async () => {
-        btn.textContent = 'Carregando treino...';
+        btn.textContent = '⏳ Carregando treino...';
         btn.disabled = true;
-        // Carregar treino estruturado da API (gera JSON com exercícios)
-        const result = await apiFetch('/api/workout');
-        if (result.success && result.data.exercises?.length) {
-            window.todayExercises = result.data.exercises;
-            window.currentExIndex = 0;
-            // Atualizar card de treino do dashboard
-            const h2 = document.querySelector('.next-workout h2');
-            const tag = document.querySelector('.next-workout .tag');
-            if (h2) h2.textContent = result.data.workout_name || 'Treino do Dia';
-            if (tag) tag.textContent = `${result.data.duration_min || 60}min`;
-            // Fechar chat, abrir sessão
-            document.getElementById('chat-overlay').style.display = 'none';
-            document.getElementById('workout-overlay').style.display = 'block';
-            updateExerciseDisplay();
-        } else {
-            btn.textContent = '▶ Iniciar Sessão de Treino';
+        try {
+            const result = await apiFetch('/api/workout');
+            if (result.success && result.data.exercises?.length) {
+                window.todayExercises = result.data.exercises;
+                window.currentExIndex = 0;
+                window.skippedIndexes = [];
+                const h2 = document.querySelector('.next-workout h2');
+                const tag = document.querySelector('.next-workout .tag');
+                if (h2) h2.textContent = result.data.workout_name || 'Treino do Dia';
+                if (tag) tag.textContent = `${result.data.duration_min || 60}min`;
+                document.getElementById('chat-overlay').style.display = 'none';
+                document.getElementById('workout-overlay').style.display = 'block';
+                updateExerciseDisplay();
+            } else {
+                btn.textContent = `⚠️ ${result.error || 'Erro — tente novamente'}`;
+                btn.disabled = false;
+                console.error('[workout]', result);
+            }
+        } catch (e) {
+            btn.textContent = '⚠️ Erro de conexão — tente novamente';
             btn.disabled = false;
+            console.error('[workout]', e);
         }
     });
     msgEl.appendChild(btn);

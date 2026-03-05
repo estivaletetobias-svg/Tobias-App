@@ -334,33 +334,39 @@ app.post('/api/webhook/eduzz', async (req, res) => {
     const { status, customer_email } = req.body;
 
     try {
-        // Buscar usuário pelo e-mail
         const { data: { users } } = await supabase.auth.admin.listUsers();
-        const user = users.find(u => u.email === customer_email);
+        let user = users.find(u => u.email === (customer_email || '').toLowerCase());
 
         if (!user) {
-            // Criar conta provisória — aluno receberá Magic Link por e-mail
-            await supabase.auth.admin.createUser({
+            console.log('[eduzz] Criando novo usuário:', customer_email);
+            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
                 email: customer_email,
                 email_confirm: true,
                 user_metadata: { source: 'eduzz', is_active: false }
             });
+            if (createError) throw createError;
+            user = newUser.user;
         }
 
-        // Mapear status Eduzz → is_active
-        const activeStatuses = ['paid', 'approved', 'active'];
-        const isActive = activeStatuses.includes(status?.toLowerCase());
+        const activeStatuses = ['paid', 'approved', 'active', 'concluido', '1', 1];
+        const isActive = activeStatuses.includes(status?.toString().toLowerCase());
 
-        await supabase
+        // Garantir que o perfil exista e esteja ativo
+        const { error: upsertErr } = await supabase
             .from('profiles')
-            .upsert({ id: user?.id, is_active: isActive })
-            .eq('id', user?.id);
+            .upsert({
+                id: user.id,
+                full_name: req.body.customer_name || customer_email.split('@')[0],
+                is_active: isActive
+            });
 
-        console.log(`[eduzz] ${customer_email} → is_active: ${isActive}`);
+        if (upsertErr) throw upsertErr;
+
+        console.log(`[eduzz] Sucesso: ${customer_email} → is_active: ${isActive}`);
         return res.json(ok({ processed: true }));
     } catch (e) {
-        console.error('[webhook/eduzz]', e);
-        return res.status(500).json(err('Erro ao processar webhook.'));
+        console.error('[webhook/eduzz] Erro fatal:', e);
+        return res.status(500).json(err(`Erro no processamento: ${e.message}`));
     }
 });
 

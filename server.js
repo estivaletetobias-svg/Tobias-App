@@ -24,6 +24,15 @@ const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID; // ID do "Master Brain"
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
 
+// Permitir servir a pasta "public" e a própria raiz estaticamente para facilitar testes de rede local do Frontend no mobile.
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
+
+
 // ─── Helper: Resposta Padrão ───────────────────────────────────────────────
 const ok = (data) => ({ success: true, data });
 const err = (msg) => ({ success: false, error: msg });

@@ -23,20 +23,22 @@
 
     <!-- Onboarding: Immersive Intro -->
     <div id="onboarding-overlay" class="onboarding-overlay active">
-        <div class="onboarding-container">
-            <div class="onboarding-step active" data-step="1">
-                <div class="glass-card aura-center" style="border:none;background:transparent">
-                    <div class="aura-bloom">IA</div>
-                    <h1 style="font-size:32px;margin-bottom:12px;letter-spacing:-1px">IA Personal Coach</h1>
-                    <p style="margin-bottom:40px;color:var(--text-sec);line-height:1.6;font-size:16px">
-                        Sua evolução começa agora.<br>
-                        O Coach está pronto para analisar seu perfil.
-                    </p>
-                    <button class="aura-btn" onclick="startWithAI()" id="btn-start-ai" style="padding:20px">
-                        Iniciar Diagnóstico ✦
-                    </button>
-                </div>
+        <div class="aura-bloom" style="top:50%; left:50%; transform:translate(-50%,-50%)"></div>
+        <div class="onboarding-content glass-card" style="text-align:center; padding:60px 48px">
+            <div
+                style="font-size:120px; font-weight:900; color:var(--accent); letter-spacing:-12px; margin-bottom:40px; opacity:0.9; line-height:0.8">
+                IA
             </div>
+            <h1 style="font-size:32px; font-weight:300; letter-spacing:-1px; margin-bottom:12px">BEM-VINDO AO AMANHÃ
+            </h1>
+            <p style="margin-bottom:48px; color:var(--text-sec); line-height:1.6; font-size:16px">
+                Seu Coach Pessoal de IA foi configurado.<br>
+                Sua jornada de elite começa agora.
+            </p>
+            <button class="aura-btn" onclick="startWithAI()" id="btn-start-ai"
+                style="padding:24px 60px; font-size:16px; border-radius:100px; background:linear-gradient(135deg, var(--text-main) 0%, #333 100%)">
+                Falar com o Coach ✦
+            </button>
         </div>
     </div>
 
@@ -114,12 +116,20 @@
         </div>
     </main>
 
-    <!-- Chat Overlay (Hidden by default) -->
+    <!-- Chat Overlay (Floating Portal) -->
     <div class="chat-overlay" id="chat-overlay">
+        <div class="aura-bloom" style="bottom:10%; right:10%"></div>
         <div class="chat-window glass-card">
             <div class="chat-header">
-                <h3>IA Personal Coach</h3>
-                <button id="close-chat">×</button>
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <div>
+                        <h3 style="margin-bottom:4px">IA Personal Coach</h3>
+                        <div
+                            style="font-size:10px; color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:1px">
+                            ● Sistema Online</div>
+                    </div>
+                    <button id="close-chat" class="close-btn" style="font-size:28px">×</button>
+                </div>
             </div>
             <div class="chat-content" id="chat-messages">
                 <div class="msg ai">Olá, Rubens. Vi que seu sono foi excelente ontem (8h). Pronto para bater seu recorde

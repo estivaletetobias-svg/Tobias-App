@@ -378,16 +378,27 @@ body {
 }
 
 .msg {
-    padding: 12px 16px;
-    border-radius: 16px;
+    padding: 16px 20px;
+    border-radius: 20px;
     margin-bottom: 12px;
-    max-width: 80%;
+    max-width: 90%;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.msg ol,
+.msg ul {
+    padding-left: 20px;
+    margin: 10px 0;
 }
 
 .ai {
-    background: #F5F5F7;
+    background: rgba(255, 255, 255, 0.9);
     color: var(--text-main);
     align-self: flex-start;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
 
 .chat-input-area {
@@ -411,25 +422,29 @@ body {
     border-color: var(--accent);
 }
 
-/* Onboarding Specific */
+/* Onboarding Specific - Immersive Portal */
 .onboarding-overlay {
     position: fixed;
     inset: 0;
-    background: #FFFFFF;
-    z-index: 2000;
+    z-index: 5000;
+    background: #F0F0F3;
+    background-image:
+        radial-gradient(at 0% 0%, rgba(124, 106, 255, 0.2) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(79, 200, 255, 0.2) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, #FFFFFF 0px, transparent 100%);
     display: none;
     align-items: center;
     justify-content: center;
+    padding: 40px;
 }
 
 .onboarding-overlay.active {
     display: flex;
 }
 
-.onboarding-container {
+.onboarding-content {
+    max-width: 500px;
     width: 100%;
-    max-width: 450px;
-    padding: 20px;
 }
 
 .onboarding-step {
@@ -561,23 +576,26 @@ body {
 }
 
 .exercise-count {
-    font-size: 14px;
+    font-size: 11px;
     color: var(--text-sec);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    font-weight: 300;
 }
 
 .video-placeholder {
     width: 100%;
-    aspect-ratio: 16/9;
-    background: rgba(0, 0, 0, 0.05);
+    height: 120px;
+    background: rgba(0, 0, 0, 0.03);
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-sec);
     margin-bottom: 24px;
-    border: 1px solid var(--glass-border);
+    border: 1px dashed rgba(0, 0, 0, 0.1);
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .exercise-info h2 {

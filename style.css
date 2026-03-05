@@ -56,9 +56,13 @@ body {
         radial-gradient(at 100% 100%, rgba(124, 106, 255, 0.1) 0px, transparent 50%),
         radial-gradient(at 0% 100%, rgba(79, 200, 255, 0.1) 0px, transparent 50%);
     color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
+    margin: 0;
 }
 
 .onboarding-overlay {
@@ -108,6 +112,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
+    width: 100%;
+    z-index: 10;
 }
 
 .logo {
@@ -161,16 +168,15 @@ body {
 .app-container {
     padding: 12px 20px;
     padding-top: env(safe-area-inset-top);
-    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
     max-width: 500px;
     margin: 0 auto;
     width: 100%;
-    height: calc(100dvh - 70px);
-    /* Subtrai a altura do top-nav aprox */
+    flex: 1;
     overflow-y: auto;
-    /* Apenas o container rola se necessário */
     overflow-x: hidden;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Glass Cards */
@@ -192,8 +198,8 @@ body {
 
 @media (max-width: 480px) {
     .glass-card {
-        padding: 20px 16px;
-        border-radius: 24px;
+        padding: 24px 20px;
+        border-radius: 32px;
     }
 }
 
@@ -309,6 +315,8 @@ body {
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     box-shadow: 0 10px 20px -5px rgba(124, 106, 255, 0.4);
     letter-spacing: 0.3px;
+    position: relative;
+    z-index: 5;
 }
 
 .aura-btn:hover {
@@ -331,19 +339,20 @@ body {
     background: rgba(255, 255, 255, 0.08);
 }
 
+/* AI Bubble */
 .chat-bubble {
     position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom));
-    right: 20px;
+    bottom: 32px;
+    right: 32px;
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 30px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    gap: 12px;
+    padding: 12px 24px;
+    border-radius: 40px;
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
     cursor: pointer;
     z-index: 100;
     transition: all 0.3s ease;
@@ -378,7 +387,6 @@ body {
     width: 100%;
     max-width: 500px;
     height: 100%;
-    /* Ocupa o container overlay */
     max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 40px);
     display: flex;
     flex-direction: column;
@@ -411,8 +419,9 @@ body {
 }
 
 .chat-header h3 {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
 }
 
 .chat-content {
@@ -420,18 +429,17 @@ body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Habilita rolagem suave nativa no iOS */
-    padding: 16px;
+    padding: 24px;
     scroll-behavior: smooth;
 }
 
 .msg {
-    padding: 12px 16px;
-    border-radius: 16px;
-    margin-bottom: 8px;
+    padding: 16px 20px;
+    border-radius: 20px;
+    margin-bottom: 12px;
     width: fit-content;
     max-width: 90%;
-    font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
@@ -457,6 +465,46 @@ body {
 }
 
 .chat-input-area {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    min-width: 0;
+    /* Previne que o input force o layout e empurre o botão pra fora */
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: #F5F5F7;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.2s;
+    font-size: 14px;
+}
+
+.chat-input-area input:focus {
+    border-color: var(--accent);
+}
+
+.chat-input-area button {
+    padding: 0 16px;
+    border-radius: 12px;
+    background: var(--text-main);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    /* Impede que o botão seja esmagado/cortado */
+}
+
+/* Onboarding Specific - Immersive Portal */
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
     z-index: 5000;
     background: #F0F0F3;
     background-image:
@@ -781,6 +829,8 @@ body {
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     letter-spacing: -0.2px;
+    position: relative;
+    z-index: 5;
 }
 
 .aura-btn:hover {
@@ -972,9 +1022,6 @@ body {
     color: var(--text-sec);
     line-height: 1;
     margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .status-item strong {

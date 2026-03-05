@@ -242,8 +242,9 @@ function parseWorkoutFromAIText(text) {
         const nameMatch = line.match(/\*\*([^*]{3,40})\*\*/);
         if (!nameMatch) continue;
         const name = nameMatch[1].trim();
-        // Ignorar cabeçalhos de seção
-        if (/aquecimento|finaliza|visao|seção|semana|dia/i.test(name)) continue;
+        // Ignorar cabeçalhos de seção, emojis de categoria e avisos
+        if (/aquecimento|finaliza|visao|seção|semana|dia|treino|importante|dica/i.test(name)) continue;
+        if (name.includes('🔷') || name.includes('✨')) continue;
         const combined = line + ' ' + (lines[i + 1] || '');
         const srMatch = combined.match(/(\d+)\s*[xX×]\s*(\d+(?:-\d+)?)/);
         const restMatch = combined.match(/[Dd]escanso[:\s]+(\d+)/);

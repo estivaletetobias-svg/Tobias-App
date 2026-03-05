@@ -1182,6 +1182,8 @@ dialog::backdrop {
 }
 
 .finish-container {
-    display: none;
-    /* Escondido por padrão, navigation faz o serviço */
+    display: block;
+    width: 100%;
+    margin-top: 48px;
+    padding-bottom: 60px;
 }

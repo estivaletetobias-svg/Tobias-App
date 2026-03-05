@@ -856,8 +856,13 @@ function animateValue(selector, start, end, duration) {
 }
 
 window.dismissWorkout = function () {
-    if (confirm('Deseja encerrar o treino sem salvar?')) {
+    if (confirm('Deseja FINALIZAR E SALVAR o treino agora?')) {
+        finishWorkoutSession();
+    } else if (confirm('Deseja SAIR SEM SALVAR? (Isso perderá o progresso desta sessão)')) {
         document.getElementById('workout-overlay').style.display = 'none';
+        window.skippedIndexes = [];
+        window.currentExIndex = 0;
+        window.currentSetIndex = 1;
     }
 };
 

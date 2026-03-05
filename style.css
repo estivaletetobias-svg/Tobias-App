@@ -389,8 +389,14 @@ body {
 
 .msg ol,
 .msg ul {
-    padding-left: 20px;
-    margin: 10px 0;
+    padding-left: 15px;
+    margin: 12px 0;
+    list-style-position: inside;
+}
+
+.msg li {
+    margin-bottom: 8px;
+    line-height: 1.6;
 }
 
 .ai {
@@ -774,15 +780,19 @@ body {
 
 .workout-actions {
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
-    margin: 40px 0 20px;
+    margin: 32px 0;
+    width: 100%;
 }
 
 .btn-nav-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 22px;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border-radius: 18px;
     border: 1px solid rgba(0, 0, 0, 0.04);
     background: white;
     display: flex;
@@ -791,7 +801,7 @@ body {
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-    font-size: 18px;
+    font-size: 20px;
     color: var(--text-main);
 }
 
@@ -802,10 +812,11 @@ body {
 }
 
 #next-ex {
-    flex: 2;
-    /* Ocupa o espaço central/principal */
-    height: 64px;
-    border-radius: 22px;
+    flex: 1;
+    min-width: 0;
+    height: 56px;
+    border-radius: 18px;
+    background: var(--text-main);
 }
 
 .finish-container {

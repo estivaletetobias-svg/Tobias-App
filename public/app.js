@@ -147,7 +147,9 @@ async function loadTodayWorkout(hasCompletedToday = false) {
     const result = await apiFetch('/api/workout').catch(() => ({ success: false }));
     const titleEl = document.getElementById('workout-title');
     const startBtn = document.getElementById('start-session-btn');
+    const durationEl = document.getElementById('workout-duration');
 
+    // 1. Prioridade: Se já completou, estiliza o botão e título
     if (hasCompletedToday) {
         if (titleEl) titleEl.textContent = 'Sessão Cumprida ✅';
         if (startBtn) {
@@ -156,6 +158,7 @@ async function loadTodayWorkout(hasCompletedToday = false) {
             startBtn.disabled = true;
             startBtn.style.opacity = '0.6';
         }
+        if (durationEl) durationEl.textContent = '--';
         return;
     }
 
@@ -163,7 +166,6 @@ async function loadTodayWorkout(hasCompletedToday = false) {
 
     const w = result.data;
     if (titleEl) titleEl.textContent = w.workout_name || 'Performance & Power';
-    const durationEl = document.getElementById('workout-duration');
     if (durationEl) durationEl.textContent = `${w.duration_min || 60}min`;
 
     // Armazenar exercícios para a sessão
@@ -831,10 +833,14 @@ async function finishWorkoutSession() {
         });
         if (result && result.success) {
             const newScore = result.data?.discipline_score;
+            // 3. Atualizar Dashboard Global IMEDIATAMENTE no Front
             if (msgEl) msgEl.textContent = '🔥 Excelente foco! Missão Cumprida.';
             if (scoreDisplay) scoreDisplay.textContent = newScore || '--';
 
-            // 3. Atualizar Dashboard Global (Forçar Refresh dos dados)
+            // Força o estado visual de concluído no Dashboard antes mesmo de recarregar
+            loadTodayWorkout(true);
+
+            // 4. Refresh completo dos dados (Score, etc)
             await initDashboard();
         } else {
             throw new Error(result?.error || 'Erro inesperado da API.');

@@ -127,12 +127,12 @@ app.get('/api/profile', requireAuth, async (req, res) => {
 
         if (error || !profile) return res.status(404).json(err('Perfil não encontrado.'));
 
-        // Check for today's workout completion
+        // Check for today's workout completion (inclusive de timezone drift)
         const { data: todayLog } = await supabase
             .from('workout_logs')
             .select('id')
             .eq('user_id', req.user.id)
-            .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+            .gte('created_at', new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()) // Últimas 18h cobre "hoje" na maioria dos fusos
             .limit(1);
 
         const dashboardData = {

@@ -389,9 +389,9 @@ body {
 
 .msg ol,
 .msg ul {
-    padding-left: 15px;
+    padding-left: 24px;
     margin: 12px 0;
-    list-style-position: inside;
+    list-style-position: outside;
 }
 
 .msg li {

@@ -39,28 +39,38 @@ const err = (msg) => ({ success: false, error: msg });
 
 // ─── Middleware: Auth Guard ────────────────────────────────────────────────
 async function requireAuth(req, res, next) {
-    const token = req.headers.authorization?.split('Bearer ')[1];
-    if (!token) return res.status(401).json(err('Token ausente.'));
+    try {
+        const token = req.headers.authorization?.split('Bearer ')[1];
+        if (!token) return res.status(401).json(err('Token ausente.'));
 
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return res.status(401).json(err('Token inválido.'));
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) return res.status(401).json(err('Token inválido.'));
 
-    req.user = user;
-    next();
+        req.user = user;
+        next();
+    } catch (e) {
+        console.error('[requireAuth Error]', e);
+        res.status(500).json(err('Erro interno na autenticação.'));
+    }
 }
 
 // ─── Middleware: Subscription Guard ───────────────────────────────────────
 async function requireSubscription(req, res, next) {
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_active')
-        .eq('id', req.user.id)
-        .single();
+    try {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_active')
+            .eq('id', req.user.id)
+            .single();
 
-    if (!profile?.is_active) {
-        return res.status(403).json(err('Assinatura inativa. Acesso bloqueado.'));
+        if (!profile?.is_active) {
+            return res.status(403).json(err('Assinatura inativa. Acesso bloqueado.'));
+        }
+        next();
+    } catch (e) {
+        console.error('[requireSubscription Error]', e);
+        res.status(500).json(err('Erro ao verificar assinatura.'));
     }
-    next();
 }
 
 // ══════════════════════════════════════════════════════════════════════════

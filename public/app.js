@@ -83,14 +83,20 @@ async function apiFetch(path, options = {}, retries = 2) {
         });
 
         const text = await res.text();
+        let data;
         try {
-            const data = JSON.parse(text);
-            if (!res.ok) throw new Error(data.error || `Erro HTTP ${res.status}`);
-            return data;
+            data = JSON.parse(text);
         } catch (e) {
-            if (res.ok) return { success: true, message: 'Operação concluída' };
-            throw new Error(e.message || 'Resposta inválida do servidor');
+            console.error('Falha ao processar JSON do servidor. Texto recebido:', text);
+            if (!res.ok) {
+                const snippet = text.substring(0, 100).replace(/<[^>]*>/g, '');
+                throw new Error(`Erro ${res.status}: ${snippet || 'Resposta inválida'}`);
+            }
+            return { success: true, message: 'Operação concluída' };
         }
+
+        if (!res.ok) throw new Error(data.error || `Erro HTTP ${res.status}`);
+        return data;
     } catch (e) {
         if (retries > 0) {
             console.warn(`Tentativa de conexão falhou. Retentando... (${retries})`);

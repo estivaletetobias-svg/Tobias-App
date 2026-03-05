@@ -1174,3 +1174,14 @@ dialog::backdrop {
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.05);
 }
+
+.aura-btn.accent-mode {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    border: none;
+}
+
+.finish-container {
+    display: none;
+    /* Escondido por padrão, navigation faz o serviço */
+}

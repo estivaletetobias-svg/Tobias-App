@@ -124,18 +124,16 @@ window.startWithAI = async function () {
 // ─── Treino do Dia ─────────────────────────────────────────────────────────
 async function loadTodayWorkout(hasCompletedToday = false) {
     const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
-    const card = document.querySelector('.next-workout');
+    const titleEl = document.getElementById('workout-title');
     const startBtn = document.getElementById('start-session-btn');
 
     if (hasCompletedToday) {
-        if (card) {
-            card.querySelector('h2').textContent = 'Sessão Cumprida ✅';
-            card.querySelector('p').textContent = `Excelente trabalho hoje! Rescanse para o próximo treino.`;
-        }
+        if (titleEl) titleEl.textContent = 'Sessão Cumprida ✅';
         if (startBtn) {
-            startBtn.textContent = 'Treino Concluído';
+            startBtn.innerHTML = 'Treino Concluído <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:8px"><polyline points="20 6 9 17 4 12"></polyline></svg>';
             startBtn.classList.add('secondary');
             startBtn.disabled = true;
+            startBtn.style.opacity = '0.6';
         }
         return;
     }
@@ -143,10 +141,9 @@ async function loadTodayWorkout(hasCompletedToday = false) {
     if (!result || !result.success) return;
 
     const w = result.data;
-    if (card) {
-        card.querySelector('h2').textContent = w.workout_name || 'Performance & Power';
-        card.querySelector('p').textContent = `Foco: ${w.focus || 'Membros superiores'} · ${w.duration_min || 60}min`;
-    }
+    if (titleEl) titleEl.textContent = w.workout_name || 'Performance & Power';
+    const durationEl = document.getElementById('workout-duration');
+    if (durationEl) durationEl.textContent = `${w.duration_min || 60}min`;
 
     // Armazenar exercícios para a sessão
     window.todayExercises = w.exercises || [];
@@ -225,11 +222,14 @@ async function updateExerciseDisplay() {
 
             if (currentSet < totalSets) {
                 // Modificado para continuar na mesma série e mostrar o check
-                nextBtn.innerHTML = `Série ${currentSet}/${totalSets} <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                nextBtn.innerHTML = `Set ${currentSet}/${totalSets} <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                nextBtn.classList.add('accent-mode'); // Estilo especial para set
             } else if (isLastEx && noSkippedLeft) {
                 nextBtn.innerHTML = 'Concluir Treino <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                nextBtn.classList.remove('accent-mode');
             } else {
                 nextBtn.innerHTML = 'Próximo <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                nextBtn.classList.remove('accent-mode');
             }
         }
 
@@ -808,77 +808,43 @@ async function finishWorkoutSession() {
                 perceived_effort: 7
             })
         });
+        if (result && result.success) {
+            const newScore = result.data?.discipline_score;
+            if (msgEl) msgEl.textContent = '🔥 Excelente foco! Missão Cumprida.';
+            if (scoreDisplay) scoreDisplay.textContent = newScore || '--';
 
-        const newScore = result?.data?.discipline_score;
-
-        // ─── Dashboard Management ────────────────────────────────────────────────
-        async function initDashboard() {
-            const user = await sb.auth.getUser();
-            if (!user.data.user) return;
-
-            // 1. Carregar perfil completo
-            const profile = await apiFetch(`/api/profile?email=${user.data.user.email}`);
-
-            // 2. Animação de Emergência (Sequential Fade In)
-            const cards = document.querySelectorAll('.app-container > .glass-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'all 0.8s cubic-bezier(0.23, 1, 0.32, 1)';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, 100 * index);
-            });
-
-            if (profile.success) {
-                const data = profile.data;
-                window.userProfile = data;
-
-                // Atualizar Score com animação suave
-                const score = data.discipline_score || 0;
-                animateValue('.percentage', 0, score, 1500);
-                const circle = document.getElementById('discipline-circle');
-                if (circle) {
-                    setTimeout(() => {
-                        circle.style.strokeDasharray = `${score}, 100`;
-                    }, 500);
-                }
-            }
-        }
-
-        function animateValue(selector, start, end, duration) {
-            const obj = document.querySelector(selector);
-            if (!obj) return;
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-        // Atualizar modal com resultado
-        if (msgEl) msgEl.textContent = '🔥 Excelente foco! Treino registrado.';
-        if (scoreDisplay && newScore != null) scoreDisplay.textContent = `Score: ${newScore}/100`;
-
-        // Atualizar score no dashboard
-        if (newScore != null) {
-            const scoreEl = document.querySelector('.percentage');
-            const circleEl = document.querySelector('.circle');
-            if (scoreEl) scoreEl.textContent = newScore;
-            if (circleEl) circleEl.setAttribute('stroke-dasharray', `${newScore}, 100`);
+            // 3. Atualizar Dashboard Global (Forçar Refresh dos dados)
+            await initDashboard();
+        } else {
+            throw new Error(result?.error || 'Erro inesperado da API.');
         }
     } catch (e) {
-        if (msgEl) msgEl.textContent = 'Treino concluído! (erro ao salvar — tente novamente)';
-        console.error('[finish]', e);
+        if (msgEl) msgEl.textContent = `Erro: ${e.message}`;
+        console.error('[finishWorkoutSession]', e);
     }
-
     window.skippedIndexes = [];
 }
+
+function animateValue(selector, start, end, duration) {
+    const obj = document.querySelector(selector);
+    if (!obj) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = Math.floor(progress * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+}
+
+window.dismissWorkout = function () {
+    if (confirm('Deseja encerrar o treino sem salvar?')) {
+        document.getElementById('workout-overlay').style.display = 'none';
+    }
+};
 
 // ─── Dashboard Management (Global Lifecycle) ───────────────────────────────
 async function initDashboard() {

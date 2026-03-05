@@ -255,31 +255,40 @@ REGRAS CRÍTICAS DE FORMATAÇÃO:
 // ══════════════════════════════════════════════════════════════════════════
 app.post('/api/workout/log', requireAuth, requireSubscription, async (req, res) => {
     const { workout_name, perceived_effort, exercises_summary } = req.body;
+    console.log('[workout/log] Iniciando registro para:', req.user.id);
 
     try {
-        const richName = exercises_summary
+        let richName = exercises_summary
             ? `${workout_name || 'Treino do Dia'} | ${exercises_summary}`
             : (workout_name || 'Treino do Dia');
+
+        // Truncar para evitar erro de banco se a string for gigante
+        if (richName.length > 500) richName = richName.substring(0, 497) + '...';
 
         // 1. Registrar o log
         const { error: insertErr } = await supabase.from('workout_logs').insert({
             user_id: req.user.id,
             workout_name: richName,
-            perceived_effort
+            perceived_effort: perceived_effort || 7
         });
 
-        if (insertErr) console.error('Insert workout log erro:', insertErr);
+        if (insertErr) {
+            console.error('[workout/log] Erro Supabase Insert:', insertErr);
+            return res.status(500).json(err(`Erro ao salvar no banco: ${insertErr.message}`));
+        }
 
-        // 2. Recalcular Discipline Score (média dos últimos 30 logs)
+        // 2. Recalcular Discipline Score (últimos 30 dias)
         const { data: logs, error: selectErr } = await supabase
             .from('workout_logs')
             .select('id')
             .eq('user_id', req.user.id)
             .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
-        if (selectErr) console.error('Select logs erro:', selectErr);
+        if (selectErr) {
+            console.error('[workout/log] Erro Supabase Select:', selectErr);
+            // Mesmo se falhar o score, o treino foi salvo. Podemos retornar sucesso mas avisar o log.
+        }
 
-        // Cada treino nos últimos 30 dias vale ~3.3 pontos (100 / 30)
         const totalLogs = logs ? logs.length : 0;
         const newScore = Math.min(100, Math.round((totalLogs / 30) * 100));
 
@@ -288,10 +297,11 @@ app.post('/api/workout/log', requireAuth, requireSubscription, async (req, res) 
             .update({ discipline_score: newScore })
             .eq('id', req.user.id);
 
-        return res.json(ok({ discipline_score: newScore, message: 'Treino registrado.' }));
+        console.log('[workout/log] Sucesso! Novo score:', newScore);
+        return res.json(ok({ discipline_score: newScore, message: 'Treino registrado com sucesso!' }));
     } catch (e) {
-        console.error('[workout/log]', e);
-        return res.status(500).json(err('Falha ao registrar treino.'));
+        console.error('[workout/log] Catch Error:', e);
+        return res.status(500).json(err(`Falha catastrófica: ${e.message}`));
     }
 });
 

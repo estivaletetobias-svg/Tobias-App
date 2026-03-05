@@ -147,7 +147,13 @@
     <div class="workout-overlay" id="workout-overlay">
         <div class="workout-container glass-card">
             <div class="workout-header">
-                <span class="exercise-count">Exercício 1 de 6</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span class="exercise-count">Exercício 1 de 6</span>
+                    <button onclick="dismissWorkout()"
+                        style="background:rgba(239,68,68,0.1); color:#ef4444; border:none; padding:6px 14px; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer;">
+                        Encerrar
+                    </button>
+                </div>
                 <div class="ex-header-cluster">
                     <div class="ex-illustration-circle" id="ex-drawing-area">
                         <!-- Ilustração minimalista entrará aqui -->

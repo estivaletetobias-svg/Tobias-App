@@ -605,6 +605,40 @@ body {
     font-weight: 500;
 }
 
+/* Exercise Header & Illustration Anchor */
+.ex-header-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0 32px;
+    text-align: center;
+}
+
+.ex-illustration-circle {
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    border-radius: 50%;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.03),
+        inset 0 1px 1px rgba(255, 255, 255, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.ex-illustration-circle::after {
+    content: '✦';
+    font-size: 32px;
+    color: var(--accent);
+    opacity: 0.3;
+}
+
 .exercise-info h2 {
     font-size: 32px;
     font-weight: 300;
@@ -617,7 +651,7 @@ body {
     color: var(--text-sec);
     font-size: 15px;
     font-weight: 400;
-    margin-bottom: 32px;
+    max-width: 320px;
 }
 
 .workout-stats {
@@ -739,15 +773,48 @@ body {
 }
 
 .workout-actions {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
+    display: flex;
+    align-items: center;
     gap: 12px;
-    margin-top: auto;
+    margin: 40px 0 20px;
 }
 
-.aura-btn.secondary {
-    background: rgba(0, 0, 0, 0.05);
+.btn-nav-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 22px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    font-size: 18px;
     color: var(--text-main);
+}
+
+.btn-nav-icon:hover {
+    background: #F8F8FA;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+#next-ex {
+    flex: 2;
+    /* Ocupa o espaço central/principal */
+    height: 64px;
+    border-radius: 22px;
+}
+
+.finish-container {
+    margin-top: 32px;
+    width: 100%;
+}
+
+#finish-workout {
+    width: 100%;
 }
 
 .quick-ai-help {

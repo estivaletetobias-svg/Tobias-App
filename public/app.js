@@ -36,6 +36,9 @@ let authToken = null;
     // Carregar treino do dia
     await loadTodayWorkout();
 
+    // Inicializar Dashboard (Animações e Score)
+    await initDashboard();
+
     // Montar listeners
     initEventListeners();
 })();
@@ -125,9 +128,17 @@ async function loadTodayWorkout() {
 }
 
 // ─── Execução de Treino ─────────────────────────────────────────────────────
-function updateExerciseDisplay() {
+async function updateExerciseDisplay() {
+    const container = document.querySelector('.workout-container');
     const exs = window.todayExercises || [];
     if (!exs.length) return;
+
+    // Efeito de Transição Suave
+    if (container) {
+        container.style.opacity = '0';
+        container.style.transform = 'translateX(10px)';
+        await new Promise(r => setTimeout(r, 200));
+    }
 
     const ex = exs[window.currentExIndex];
     const total = exs.length;
@@ -137,25 +148,25 @@ function updateExerciseDisplay() {
     const isSkipped = skippedIndexes.includes(window.currentExIndex);
     document.querySelector('.exercise-count').textContent =
         `Exercício ${window.currentExIndex + 1} de ${total}${isSkipped ? ' ⏩ pulado' : ''}`;
+
     document.getElementById('ex-name').textContent = ex.name || 'Exercício';
     document.getElementById('ex-desc').textContent = ex.cues || '';
 
-    const stats = document.querySelectorAll('.stat-item .value');
-    if (stats[0]) stats[0].textContent = ex.sets || '--';
-    if (stats[1]) stats[1].textContent = ex.reps || '--';
-    if (stats[2]) stats[2].textContent = ex.rest_sec ? `${ex.rest_sec}s` : '--';
+    // Stats Detalhados (Editáveis)
+    document.getElementById('stat-sets').textContent = ex.sets || '3';
+    document.getElementById('stat-reps').textContent = ex.reps || '10-12';
+    document.getElementById('stat-weight').textContent = ex.weight || '0kg';
+    document.getElementById('stat-rest').textContent = ex.rest_sec ? `${ex.rest_sec}s` : '60s';
 
-    // Preview do próximo exercício (discreet strip)
+    // Preview do próximo
     const nextEx = exs[window.currentExIndex + 1];
     const preview = document.getElementById('next-ex-preview');
-    if (nextEx && preview) {
-        preview.style.display = 'block';
-        document.getElementById('next-ex-name').textContent = nextEx.name || '';
-        document.getElementById('next-ex-info').textContent =
-            nextEx.sets && nextEx.reps ? `${nextEx.sets}×${nextEx.reps}` : '';
-    } else if (preview) {
-        // Último exercício
-        preview.style.display = skippedIndexes.length > 0 ? 'none' : 'none';
+    if (nextEx) {
+        document.getElementById('next-ex-name').textContent = nextEx.name;
+        document.getElementById('next-ex-info').textContent = `${nextEx.sets}x${nextEx.reps}`;
+        if (preview) preview.style.display = 'block';
+    } else {
+        if (preview) preview.style.display = 'none';
     }
 
     // Banner de pulados
@@ -231,8 +242,9 @@ function parseWorkoutFromAIText(text) {
         const nameMatch = line.match(/\*\*([^*]{3,40})\*\*/);
         if (!nameMatch) continue;
         const name = nameMatch[1].trim();
-        // Ignorar cabeçalhos de seção
-        if (/aquecimento|finaliza|visao|seção|semana|dia/i.test(name)) continue;
+        // Ignorar cabeçalhos de seção, emojis de categoria e avisos
+        if (/aquecimento|finaliza|visao|seção|semana|dia|treino|importante|dica/i.test(name)) continue;
+        if (name.includes('🔷') || name.includes('✨')) continue;
         const combined = line + ' ' + (lines[i + 1] || '');
         const srMatch = combined.match(/(\d+)\s*[xX×]\s*(\d+(?:-\d+)?)/);
         const restMatch = combined.match(/[Dd]escanso[:\s]+(\d+)/);
@@ -292,6 +304,42 @@ function injectStartSessionButton(msgEl) {
     msgEl.appendChild(btn);
 }
 
+// ─── Type Effect (Luxury Feel) ───────────────────────────────────────────
+async function typeEffect(element, html) {
+    element.innerHTML = '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = marked.parse(html);
+    const nodes = Array.from(tempDiv.childNodes);
+
+    for (const node of nodes) {
+        const span = document.createElement('span');
+        span.style.opacity = '0';
+        span.style.transition = 'opacity 0.5s ease';
+        element.appendChild(span);
+
+        if (node.nodeType === Node.TEXT_NODE) {
+            const words = node.textContent.split(' ');
+            for (const word of words) {
+                const wordNode = document.createTextNode(word + ' ');
+                span.appendChild(wordNode);
+                span.style.opacity = '1';
+                await new Promise(r => setTimeout(r, 40));
+                autoScrollChat(element);
+            }
+        } else {
+            span.appendChild(node.cloneNode(true));
+            span.style.opacity = '1';
+            await new Promise(r => setTimeout(r, 100));
+            autoScrollChat(element);
+        }
+    }
+}
+
+function autoScrollChat(element) {
+    const container = element.closest('.chat-content') || element;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+}
+
 async function sendChatMessage() {
     const input = document.querySelector('.chat-input-area input');
     const message = input?.value?.trim();
@@ -315,8 +363,11 @@ async function sendChatMessage() {
             return;
         }
 
-        const msgEl = appendMessage(result.data.text, 'ai');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        const msgEl = appendMessage('', 'ai shimmer'); // Add shimmer class
+        msgEl.dataset.rawText = result.data.text; // Store raw text for parsing
+        await typeEffect(msgEl, result.data.text);
+        msgEl.classList.remove('shimmer'); // Remove shimmer after typing effect
+        autoScrollChat(chatMessages);
 
         // ― 3: Detectar treino e mostrar botão de sessão
         if (detectWorkoutInMessage(result.data.text)) {
@@ -538,6 +589,17 @@ function initEventListeners() {
     });
 }
 
+// ─── Drawer Management ───────────────────────────────────────────────────
+function toggleBodyScroll(lock) {
+    document.body.style.overflow = lock ? 'hidden' : '';
+}
+
+// Global Dialog Listeners
+document.querySelectorAll('dialog').forEach(d => {
+    d.onclick = (e) => { if (e.target === d) d.close(); };
+    d.onclose = () => toggleBodyScroll(false);
+});
+
 // ─── YouTube Drawer ────────────────────────────────────────────────────────
 window.openVideoDrawer = function () {
     const name = window.currentExName || 'exercício';
@@ -548,24 +610,25 @@ window.openVideoDrawer = function () {
     const link = document.getElementById('yt-link');
     if (nameEl) nameEl.textContent = name;
     if (link) link.href = ytUrl;
-    if (dialog) dialog.showModal();
-};
-
-window.closeVideoDrawer = function () {
-    document.getElementById('yt-dialog')?.close();
+    if (dialog) {
+        dialog.showModal();
+        toggleBodyScroll(true);
+    }
 };
 
 // ─── Mini-IA Dialog (nativo) ──────────────────────────────────────────────────
 window.openMiniAI = function () {
     const dialog = document.getElementById('mini-ai-dialog');
-    if (!dialog) return;
     const input = document.getElementById('mini-ai-input');
     const response = document.getElementById('mini-ai-response');
-    const ex = (window.todayExercises || [])[window.currentExIndex];
-    if (input) input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
-    if (response) { response.textContent = ''; response.style.display = 'none'; }
-    dialog.showModal();
-    setTimeout(() => input?.focus(), 150);
+    if (dialog) {
+        const ex = (window.todayExercises || [])[window.currentExIndex];
+        if (input) input.value = ex ? `Dúvida sobre ${ex.name}: ` : '';
+        if (response) { response.textContent = ''; response.style.display = 'none'; }
+        dialog.showModal();
+        toggleBodyScroll(true);
+        setTimeout(() => input?.focus(), 150);
+    }
 };
 
 // Alias para compatibilidade
@@ -573,23 +636,28 @@ window.toggleMiniAI = window.openMiniAI;
 
 window.sendMiniAI = async function () {
     const input = document.getElementById('mini-ai-input');
-    const response = document.getElementById('mini-ai-response');
-    const question = input?.value?.trim();
-    if (!question) return;
+    const responseEl = document.getElementById('mini-ai-response');
+    const text = input.value.trim();
+    if (!text) return;
 
-    if (response) { response.textContent = '⏳ Aguarde...'; response.style.display = 'block'; }
     input.value = '';
+    responseEl.style.display = 'block';
+    responseEl.innerHTML = '<div class="shimmer" style="height:20px; width:150px; border-radius:10px; margin: 10px 0;"></div>';
 
-    const result = await apiFetch('/api/chat', {
-        method: 'POST',
-        body: JSON.stringify({ message: question })
-    });
+    try {
+        const res = await apiFetch('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ message: text })
+        });
 
-    if (result.success) {
-        const text = result.data.text;
-        if (response) { response.textContent = text.substring(0, 400) + (text.length > 400 ? '...' : ''); response.style.display = 'block'; }
-    } else {
-        if (response) { response.textContent = 'Erro ao consultar a IA.'; response.style.display = 'block'; }
+        if (res.success) {
+            // Efeito gradual de surgimento
+            await typeEffect(responseEl, res.data.text.substring(0, 500));
+        } else {
+            responseEl.textContent = 'Erro ao conectar com o Coach.';
+        }
+    } catch (e) {
+        responseEl.textContent = 'Erro de rede. Tente novamente.';
     }
 };
 
@@ -634,6 +702,56 @@ async function finishWorkoutSession() {
 
         const newScore = result?.data?.discipline_score;
 
+        // ─── Dashboard Management ────────────────────────────────────────────────
+        async function initDashboard() {
+            const user = await sb.auth.getUser();
+            if (!user.data.user) return;
+
+            // 1. Carregar perfil completo
+            const profile = await apiFetch(`/api/profile?email=${user.data.user.email}`);
+
+            // 2. Animação de Emergência (Sequential Fade In)
+            const cards = document.querySelectorAll('.app-container > .glass-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.8s cubic-bezier(0.23, 1, 0.32, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+
+            if (profile.success) {
+                const data = profile.data;
+                window.userProfile = data;
+
+                // Atualizar Score com animação suave
+                const score = data.discipline_score || 0;
+                animateValue('.percentage', 0, score, 1500);
+                const circle = document.getElementById('discipline-circle');
+                if (circle) {
+                    setTimeout(() => {
+                        circle.style.strokeDasharray = `${score}, 100`;
+                    }, 500);
+                }
+            }
+        }
+
+        function animateValue(selector, start, end, duration) {
+            const obj = document.querySelector(selector);
+            if (!obj) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
         // Atualizar modal com resultado
         if (msgEl) msgEl.textContent = '🔥 Excelente foco! Treino registrado.';
         if (scoreDisplay && newScore != null) scoreDisplay.textContent = `Score: ${newScore}/100`;
@@ -651,6 +769,99 @@ async function finishWorkoutSession() {
     }
 
     window.skippedIndexes = [];
+}
+
+// ─── Dashboard Management (Global Lifecycle) ───────────────────────────────
+async function initDashboard() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+
+    // 1. Carregar perfil para pegar o score real
+    const profile = await apiFetch(`/api/profile?email=${user.email}`);
+
+    // 2. Animação de Emergência (Sequential Fade In)
+    const cards = document.querySelectorAll('.app-container > .glass-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(24px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.8s cubic-bezier(0.23, 1, 0.32, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+
+    if (profile.success) {
+        const data = profile.data;
+        const score = data.discipline_score || 0;
+
+        // Atualizar Status Bar
+        document.getElementById('stat-energy').textContent = data.daily_energy || 'Alta';
+        document.getElementById('stat-sleep').textContent = data.daily_sleep || '7.5h';
+        document.getElementById('stat-stress').textContent = data.daily_focus || 'Focado';
+
+        // Atualizar Score
+        animateValue('.percentage', 0, score, 2000);
+        const circle = document.getElementById('discipline-circle');
+        if (circle) {
+            setTimeout(() => {
+                circle.style.strokeDasharray = `${score}, 100`;
+            }, 600);
+        }
+
+        // Renderizar Consistência Semanal
+        renderWeeklyConsistency(3); // Mock: 3 treinos concluídos
+    }
+
+    // Atualizar Preview de Treino no Dashboard
+    const workout = await apiFetch('/api/workout');
+    if (workout.success) {
+        const w = workout.data;
+        document.getElementById('workout-title').textContent = w.workout_name || 'Performance';
+        document.getElementById('workout-duration').textContent = `${w.duration_min || 45}min`;
+
+        const focusArea = document.getElementById('workout-focus');
+        if (focusArea && w.focus) {
+            focusArea.innerHTML = '';
+            w.focus.split(' e ').forEach(muscle => {
+                const chip = document.createElement('span');
+                chip.className = 'muscle-chip';
+                chip.textContent = muscle.trim();
+                focusArea.appendChild(chip);
+            });
+        }
+    }
+}
+
+function renderWeeklyConsistency(completed) {
+    const dotsContainer = document.getElementById('weekly-dots');
+    const countEl = document.getElementById('weekly-count');
+    if (!dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    countEl.textContent = `${completed}/5 treinos`;
+
+    for (let i = 0; i < 7; i++) {
+        const dot = document.createElement('div');
+        dot.className = `dot ${i < completed ? 'active' : ''}`;
+        dotsContainer.appendChild(dot);
+    }
+}
+
+function animateValue(selector, start, end, duration) {
+    const obj = document.querySelector(selector);
+    if (!obj) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease Out Cubic
+        obj.innerHTML = Math.floor(easeProgress * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
 }
 
 window.dismissCompleteModal = function () {

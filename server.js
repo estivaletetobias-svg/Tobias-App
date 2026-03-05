@@ -104,6 +104,36 @@ app.post('/api/onboarding', requireAuth, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
+//  ROTA 1.5 — GET /api/profile
+//  Retorna o perfil do usuário para popular o Dashboard.
+// ══════════════════════════════════════════════════════════════════════════
+app.get('/api/profile', requireAuth, async (req, res) => {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', req.user.id)
+            .single();
+
+        if (error || !profile) return res.status(404).json(err('Perfil não encontrado.'));
+
+        // Podemos injetar valores hardcoded ou simulados para os status se não existirem
+        // para garantir que a UI não fique com "--"
+        const dashboardData = {
+            ...profile,
+            daily_energy: profile.daily_energy || 'Alta',
+            daily_sleep: profile.daily_sleep || '7.5h',
+            daily_focus: profile.daily_focus || 'Nitidez'
+        };
+
+        return res.json(ok(dashboardData));
+    } catch (e) {
+        console.error('[profile get]', e);
+        return res.status(500).json(err('Erro ao buscar perfil.'));
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════════════
 //  ROTA 2 — POST /api/chat
 //  Envia mensagem para o Master Brain e retorna resposta personalizada.
 // ══════════════════════════════════════════════════════════════════════════
@@ -217,25 +247,34 @@ REGRAS CRÍTICAS DE FORMATAÇÃO:
 //  Registra o treino concluído e atualiza o Discipline Score.
 // ══════════════════════════════════════════════════════════════════════════
 app.post('/api/workout/log', requireAuth, requireSubscription, async (req, res) => {
-    const { workout_name, perceived_effort } = req.body;
+    const { workout_name, perceived_effort, exercises_summary } = req.body;
 
     try {
+        const richName = exercises_summary
+            ? `${workout_name || 'Treino do Dia'} | ${exercises_summary}`
+            : (workout_name || 'Treino do Dia');
+
         // 1. Registrar o log
-        await supabase.from('workout_logs').insert({
+        const { error: insertErr } = await supabase.from('workout_logs').insert({
             user_id: req.user.id,
-            workout_name,
+            workout_name: richName,
             perceived_effort
         });
 
+        if (insertErr) console.error('Insert workout log erro:', insertErr);
+
         // 2. Recalcular Discipline Score (média dos últimos 30 logs)
-        const { data: logs } = await supabase
+        const { data: logs, error: selectErr } = await supabase
             .from('workout_logs')
             .select('id')
             .eq('user_id', req.user.id)
-            .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+            .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+        if (selectErr) console.error('Select logs erro:', selectErr);
 
         // Cada treino nos últimos 30 dias vale ~3.3 pontos (100 / 30)
-        const newScore = Math.min(100, Math.round((logs.length / 30) * 100));
+        const totalLogs = logs ? logs.length : 0;
+        const newScore = Math.min(100, Math.round((totalLogs / 30) * 100));
 
         await supabase
             .from('profiles')

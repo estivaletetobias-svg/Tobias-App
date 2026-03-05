@@ -31,13 +31,13 @@ let authToken = null;
     if (nameEl) nameEl.textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || 'Atleta';
 
     // Verificar se onboarding foi concluído
-    await checkOnboardingStatus();
+    try { await checkOnboardingStatus(); } catch (e) { console.error('Onboarding check failed:', e); }
 
     // Carregar treino do dia
-    await loadTodayWorkout();
+    try { await loadTodayWorkout(); } catch (e) { console.error('Workout load failed:', e); }
 
     // Inicializar Dashboard (Animações e Score)
-    await initDashboard();
+    try { await initDashboard(); } catch (e) { console.error('Dashboard init failed:', e); }
 
     // Montar listeners
     initEventListeners();
@@ -111,8 +111,8 @@ window.startWithAI = async function () {
 
 // ─── Treino do Dia ─────────────────────────────────────────────────────────
 async function loadTodayWorkout() {
-    const result = await apiFetch('/api/workout');
-    if (!result.success) return;
+    const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
+    if (!result || !result.success) return;
 
     const w = result.data;
     const card = document.querySelector('.next-workout');
@@ -283,7 +283,7 @@ function injectStartSessionButton(msgEl) {
                 window.todayExercises = parsed;
             } else {
                 // Fallback: gerar novo treino via API
-                const result = await apiFetch('/api/workout');
+                const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
                 if (!result.success || !result.data.exercises?.length) throw new Error(result.error || 'sem dados');
                 window.todayExercises = result.data.exercises;
             }
@@ -477,7 +477,7 @@ function initEventListeners() {
             return;
         }
         // Senão, carregar da API
-        const result = await apiFetch('/api/workout');
+        const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
         if (result.success && result.data.exercises?.length) {
             window.todayExercises = result.data.exercises;
             window.currentExIndex = 0;
@@ -691,7 +691,7 @@ async function finishWorkoutSession() {
 
     // 2. Registrar no banco com todos os dados
     try {
-        const result = await apiFetch('/api/workout', {
+        const result = await apiFetch('/api/workout/log', {
             method: 'POST',
             body: JSON.stringify({
                 workout_name: workoutName,
@@ -814,7 +814,7 @@ async function initDashboard() {
     }
 
     // Atualizar Preview de Treino no Dashboard
-    const workout = await apiFetch('/api/workout');
+    const workout = await apiFetch('/api/workout/today');
     if (workout.success) {
         const w = workout.data;
         document.getElementById('workout-title').textContent = w.workout_name || 'Performance';

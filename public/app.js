@@ -466,7 +466,7 @@ function initEventListeners() {
     });
 
     // Workout - abrir (via dashboard card — carrega exercícios da API)
-    document.querySelector('.next-workout .aura-btn')?.addEventListener('click', async () => {
+    document.getElementById('start-session-btn')?.addEventListener('click', async () => {
         const overlay = document.getElementById('workout-overlay');
         overlay.style.display = 'block';
         window.skippedIndexes = [];

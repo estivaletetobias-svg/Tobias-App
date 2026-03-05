@@ -138,76 +138,87 @@ async function updateExerciseDisplay() {
         container.style.opacity = '0';
         container.style.transform = 'translateX(10px)';
         await new Promise(r => setTimeout(r, 200));
-    }
+        if (!exs || exs.length === 0) {
+            // Se a lista estiver vazia (API falhou e não tem fallback), fechar modal
+            if (container) container.closest('.workout-overlay').style.display = 'none';
+            return;
+        }
 
-    const ex = exs[window.currentExIndex];
-    const total = exs.length;
-    const skippedIndexes = window.skippedIndexes || [];
+        const ex = exs[window.currentExIndex];
+        const total = exs.length;
+        const skippedIndexes = window.skippedIndexes || [];
 
-    // Indicador de exercício atual (com badge se pulado)
-    const isSkipped = skippedIndexes.includes(window.currentExIndex);
-    document.querySelector('.exercise-count').textContent =
-        `Exercício ${window.currentExIndex + 1} de ${total}${isSkipped ? ' ⏩ pulado' : ''}`;
+        // Indicador de exercício atual (com badge se pulado)
+        const isSkipped = skippedIndexes.includes(window.currentExIndex);
+        document.querySelector('.exercise-count').textContent =
+            `Exercício ${window.currentExIndex + 1} de ${total}${isSkipped ? ' ⏩ pulado' : ''}`;
 
-    document.getElementById('ex-name').textContent = ex.name || 'Exercício';
-    document.getElementById('ex-desc').textContent = ex.cues || '';
+        document.getElementById('ex-name').textContent = ex.name || 'Exercício';
+        document.getElementById('ex-desc').textContent = ex.cues || '';
 
-    // Stats Detalhados (Editáveis)
-    document.getElementById('stat-sets').textContent = ex.sets || '3';
-    document.getElementById('stat-reps').textContent = ex.reps || '10-12';
-    document.getElementById('stat-weight').textContent = ex.weight || '0kg';
-    document.getElementById('stat-rest').textContent = ex.rest_sec ? `${ex.rest_sec}s` : '60s';
+        // Stats Detalhados (Editáveis)
+        document.getElementById('stat-sets').textContent = ex.sets || '3';
+        document.getElementById('stat-reps').textContent = ex.reps || '10-12';
+        document.getElementById('stat-weight').textContent = ex.weight || '0kg';
+        document.getElementById('stat-rest').textContent = ex.rest_sec ? `${ex.rest_sec}s` : '60s';
 
-    // Preview do próximo
-    const nextEx = exs[window.currentExIndex + 1];
-    const preview = document.getElementById('next-ex-preview');
-    if (nextEx) {
-        document.getElementById('next-ex-name').textContent = nextEx.name;
-        document.getElementById('next-ex-info').textContent = `${nextEx.sets}x${nextEx.reps}`;
-        if (preview) preview.style.display = 'block';
-    } else {
-        if (preview) preview.style.display = 'none';
-    }
-
-    // Banner de pulados
-    const banner = document.getElementById('skipped-banner');
-    const skippedCount = document.getElementById('skipped-count');
-    if (banner) {
-        const realSkipped = skippedIndexes.filter(i => i !== window.currentExIndex).length;
-        if (realSkipped > 0) {
-            banner.style.display = 'block';
-            skippedCount.textContent = realSkipped;
+        // Preview do próximo
+        const nextEx = exs[window.currentExIndex + 1];
+        const preview = document.getElementById('next-ex-preview');
+        if (nextEx) {
+            document.getElementById('next-ex-name').textContent = nextEx.name;
+            document.getElementById('next-ex-info').textContent = `${nextEx.sets}x${nextEx.reps}`;
+            if (preview) preview.style.display = 'block';
         } else {
-            banner.style.display = 'none';
+            if (preview) preview.style.display = 'none';
+        }
+
+        // Banner de pulados
+        const banner = document.getElementById('skipped-banner');
+        const skippedCount = document.getElementById('skipped-count');
+        if (banner) {
+            const realSkipped = skippedIndexes.filter(i => i !== window.currentExIndex).length;
+            if (realSkipped > 0) {
+                banner.style.display = 'block';
+                skippedCount.textContent = realSkipped;
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        // Botoão Próximo vs Concluir
+        const nextBtn = document.getElementById('next-ex');
+        if (nextBtn) {
+            const allDone = exs.every((_, i) => !skippedIndexes.includes(i) || i === window.currentExIndex);
+            const isLast = window.currentExIndex === total - 1;
+            if (isLast && skippedIndexes.filter(i => i !== window.currentExIndex).length === 0) {
+                nextBtn.textContent = 'Concluir Treino ✓';
+            } else {
+                nextBtn.textContent = 'Próximo ✔';
+            }
+        }
+
+        // Guardar nome do exercício para o drawer de vídeo
+        window.currentExName = ex.name || '';
+
+        // Reset timer display ao navegar
+        const display = document.getElementById('timer');
+        if (display) {
+            const restSec = ex.rest_sec || 60;
+            const m = Math.floor(restSec / 60).toString().padStart(2, '0');
+            const s = (restSec % 60).toString().padStart(2, '0');
+            display.textContent = `${m}:${s}`;
+            display.style.color = '';
+        }
+        const restBtn = document.getElementById('start-rest');
+        if (restBtn) { restBtn.disabled = false; restBtn.textContent = 'Iniciar Descanso'; }
+
+        // Restaura a visibilidade suavemente (resolve o bug da tela branca)
+        if (container) {
+            container.style.opacity = '1';
+            container.style.transform = 'translateX(0)';
         }
     }
-
-    // Botoão Próximo vs Concluir
-    const nextBtn = document.getElementById('next-ex');
-    if (nextBtn) {
-        const allDone = exs.every((_, i) => !skippedIndexes.includes(i) || i === window.currentExIndex);
-        const isLast = window.currentExIndex === total - 1;
-        if (isLast && skippedIndexes.filter(i => i !== window.currentExIndex).length === 0) {
-            nextBtn.textContent = 'Concluir Treino ✓';
-        } else {
-            nextBtn.textContent = 'Próximo ✔';
-        }
-    }
-
-    // Guardar nome do exercício para o drawer de vídeo
-    window.currentExName = ex.name || '';
-
-    // Reset timer display ao navegar
-    const display = document.getElementById('timer');
-    if (display) {
-        const restSec = ex.rest_sec || 60;
-        const m = Math.floor(restSec / 60).toString().padStart(2, '0');
-        const s = (restSec % 60).toString().padStart(2, '0');
-        display.textContent = `${m}:${s}`;
-        display.style.color = '';
-    }
-    const restBtn = document.getElementById('start-rest');
-    if (restBtn) { restBtn.disabled = false; restBtn.textContent = 'Iniciar Descanso'; }
 }
 
 // ─── Chat Real com OpenAI ──────────────────────────────────────────────────
@@ -470,23 +481,38 @@ function initEventListeners() {
         const overlay = document.getElementById('workout-overlay');
         overlay.style.display = 'block';
         window.skippedIndexes = [];
+
         // Se já tem exercícios carregados, só abre
-        if (window.todayExercises?.length) {
+        if (window.todayExercises && window.todayExercises.length > 0) {
             window.currentExIndex = 0;
             updateExerciseDisplay();
             return;
         }
+
         // Senão, carregar da API
+        const btn = document.getElementById('start-session-btn');
+        const oldText = btn.textContent;
+        btn.textContent = 'Carregando...';
+
         const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
-        if (result.success && result.data.exercises?.length) {
+
+        btn.textContent = oldText; // Restore
+
+        if (result && result.success && result.data && result.data.exercises?.length > 0) {
             window.todayExercises = result.data.exercises;
-            window.currentExIndex = 0;
             const h2 = document.querySelector('.next-workout h2');
             const tag = document.querySelector('.next-workout .tag');
             if (h2) h2.textContent = result.data.workout_name || 'Treino do Dia';
             if (tag) tag.textContent = `${result.data.duration_min || 60}min`;
-            updateExerciseDisplay();
+        } else {
+            // Em caso de falha completa da IA ou banco vazio, injetar um treino de fallback para não quebrar a UI
+            window.todayExercises = [
+                { name: "Aquecimento Geral", sets: 1, reps: "5-10 min", cues: "Prepare o corpo. Este é um treino de fallback de segurança.", weight: "0kg", rest_sec: 0 }
+            ];
         }
+
+        window.currentExIndex = 0;
+        updateExerciseDisplay();
     });
     document.getElementById('close-workout')?.addEventListener('click', () => {
         // Sair sem registrar (botao Concluir e quem registra)

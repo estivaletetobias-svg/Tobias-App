@@ -183,10 +183,26 @@
                 </div>
 
                 <div class="workout-actions">
-                    <button class="btn-nav-icon" id="prev-ex" title="Anterior" style="font-size:24px">‹</button>
-                    <button class="aura-btn" id="next-ex">Próximo ✔</button>
-                    <button class="btn-nav-icon" id="skip-ex" title="Pular — volte depois"
-                        style="font-size:18px">⏩</button>
+                    <button class="btn-nav-icon" id="prev-ex" title="Anterior">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="aura-btn" id="next-ex">
+                        Próximo <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                            style="vertical-align:bottom;margin-left:4px">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                    <button class="btn-nav-icon" id="skip-ex" title="Pular — volte depois">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- Preview do próximo exercício (Executive Crystal Style) -->
@@ -208,9 +224,17 @@
                     ⚠️ Você pulou <span id="skipped-count">0</span> exercício(s). Clique para revisitar.
                 </div>
 
-                <div class="quick-ai-help" id="quick-ai-trigger" style="cursor:pointer" onclick="openMiniAI()">
-                    <span>Dúvida na execução? Pergunte à IA</span>
-                    <div class="mini-bubble">✨</div>
+                <div style="display:flex; gap:8px; margin-top:8px">
+                    <div class="quick-ai-help" id="quick-ai-trigger" style="flex:1; margin-top:0; cursor:pointer"
+                        onclick="openMiniAI()">
+                        <span>Perguntar à IA</span>
+                        <div class="mini-bubble">✨</div>
+                    </div>
+                    <div class="quick-ai-help" style="flex:1; margin-top:0; cursor:pointer;"
+                        onclick="openVideoDrawer()">
+                        <span style="font-weight:600; color:#d90429">Ver no YT</span>
+                        <div class="mini-bubble" style="color:white; background:#d90429; font-size:12px">▶</div>
+                    </div>
                 </div>
 
                 <div class="finish-container">

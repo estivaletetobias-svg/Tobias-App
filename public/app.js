@@ -258,14 +258,22 @@ function parseWorkoutFromAIText(text) {
         if (name.includes('🔷') || name.includes('✨')) continue;
         const combined = line + ' ' + (lines[i + 1] || '');
         const srMatch = combined.match(/(\d+)\s*[xX×]\s*(\d+(?:-\d+)?)/);
-        const restMatch = combined.match(/[Dd]escanso[:\s]+(\d+)/);
+        const restMatch = combined.match(/[Dd]escanso[:\s]+(\d+)\s*(min|m|seg|s)?/i);
+        let parsedRest = 60;
+        if (restMatch) {
+            parsedRest = parseInt(restMatch[1]);
+            // If the user specified minutes explicitly, or implicitly (like 1, 2, 3 instead of 60, 90)
+            if ((restMatch[2] && restMatch[2].toLowerCase().startsWith('m')) || parsedRest < 10) {
+                parsedRest *= 60;
+            }
+        }
         const parts = combined.split('|');
         const cue = parts.length > 2 ? parts[parts.length - 1].replace(/[*_`]/g, '').trim() : '';
         exercises.push({
             name,
             sets: srMatch ? parseInt(srMatch[1]) : 3,
             reps: srMatch ? srMatch[2] : '10-12',
-            rest_sec: restMatch ? parseInt(restMatch[1]) : 60,
+            rest_sec: parsedRest,
             cues: cue
         });
     }
@@ -608,10 +616,26 @@ function initEventListeners() {
     });
 
 
-    // Quick AI do Workout — abre o mini drawer
+    // Ajuste dinâmico do tempo de descanso se o usuário digitar no #stat-rest
+    document.getElementById('stat-rest')?.addEventListener('input', (e) => {
+        const val = parseInt(e.target.textContent);
+        if (!isNaN(val) && window.todayExercises) {
+            window.todayExercises[window.currentExIndex].rest_sec = val;
+            const display = document.getElementById('timer');
+            const restBtn = document.getElementById('start-rest');
+            // Só atualiza o contador se o timer não estiver rodando
+            if (display && restBtn && restBtn.textContent !== 'Descansando...') {
+                const m = Math.floor(val / 60).toString().padStart(2, '0');
+                const s = (val % 60).toString().padStart(2, '0');
+                display.textContent = `${m}:${s}`;
+            }
+        }
+    });
+
+    // Quick AI do Workout — abre o mini drawer da IA sem conflitos
     document.getElementById('quick-ai-trigger')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (window.toggleMiniAI) window.toggleMiniAI();
+        if (window.openMiniAI) window.openMiniAI();
     });
 }
 

@@ -63,15 +63,27 @@ async function checkOnboardingStatus() {
 
 // ─── API Helper ─────────────────────────────────────────────────────────────
 async function apiFetch(path, options = {}) {
+    const { data: { session } } = await sb.auth.getSession();
+    const currentToken = session ? session.access_token : authToken;
+
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
+            'Authorization': `Bearer ${currentToken}`,
             ...options.headers,
         },
     });
-    return res.json();
+
+    // Tratamento robusto para não quebrar JSON em caso de erro no servidor (500 HTML)
+    const text = await res.text();
+    try {
+        const data = JSON.parse(text);
+        if (!res.ok) throw new Error(data.error || 'Erro na API');
+        return data;
+    } catch (e) {
+        throw new Error(e.message.includes('Erro na API') ? e.message : 'Falha na conexão com o servidor');
+    }
 }
 
 // ─── Onboarding: primeiro acesso sem perfil ────────────────────────────────
@@ -110,12 +122,27 @@ window.startWithAI = async function () {
 
 
 // ─── Treino do Dia ─────────────────────────────────────────────────────────
-async function loadTodayWorkout() {
+async function loadTodayWorkout(hasCompletedToday = false) {
     const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
+    const card = document.querySelector('.next-workout');
+    const startBtn = document.getElementById('start-session-btn');
+
+    if (hasCompletedToday) {
+        if (card) {
+            card.querySelector('h2').textContent = 'Sessão Cumprida ✅';
+            card.querySelector('p').textContent = `Excelente trabalho hoje! Rescanse para o próximo treino.`;
+        }
+        if (startBtn) {
+            startBtn.textContent = 'Treino Concluído';
+            startBtn.classList.add('secondary');
+            startBtn.disabled = true;
+        }
+        return;
+    }
+
     if (!result || !result.success) return;
 
     const w = result.data;
-    const card = document.querySelector('.next-workout');
     if (card) {
         card.querySelector('h2').textContent = w.workout_name || 'Performance & Power';
         card.querySelector('p').textContent = `Foco: ${w.focus || 'Membros superiores'} · ${w.duration_min || 60}min`;
@@ -827,7 +854,7 @@ async function initDashboard() {
     if (!user) return;
 
     // 1. Carregar perfil para pegar o score real
-    const profile = await apiFetch(`/api/profile?email=${user.email}`);
+    const profileResponse = await apiFetch(`/api/profile?email=${user.email}`).catch(() => null);
 
     // 2. Animação de Emergência (Sequential Fade In)
     const cards = document.querySelectorAll('.app-container > .glass-card');
@@ -841,13 +868,18 @@ async function initDashboard() {
         }, 100 * index);
     });
 
-    if (profile.success) {
-        const data = profile.data;
+    if (profileResponse && profileResponse.success) {
+        const data = profileResponse.data;
         const score = data.discipline_score || 0;
 
         // Atualizar Status Bar
         document.getElementById('stat-energy').textContent = data.daily_energy || 'Alta';
         document.getElementById('stat-sleep').textContent = data.daily_sleep || '7.5h';
+
+        // Verifica se completou treino hoje para avisar app
+        if (data.workout_completed_today) {
+            loadTodayWorkout(true);
+        }
         document.getElementById('stat-stress').textContent = data.daily_focus || 'Focado';
 
         // Atualizar Score

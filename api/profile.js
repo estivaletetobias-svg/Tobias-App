@@ -19,11 +19,19 @@ export default async function handler(req, res) {
 
         if (error || !profile) return res.status(404).json(err('Perfil não encontrado.'));
 
+        const { data: todayLog } = await supabase
+            .from('workout_logs')
+            .select('id')
+            .eq('user_id', user.id)
+            .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+            .limit(1);
+
         return res.status(200).json(ok({
             ...profile,
             daily_energy: profile.daily_energy || 'Alta',
             daily_sleep: profile.daily_sleep || '7.5h',
-            daily_focus: profile.daily_focus || 'Nitidez'
+            daily_focus: profile.daily_focus || 'Nitidez',
+            workout_completed_today: todayLog && todayLog.length > 0
         }));
     }
 

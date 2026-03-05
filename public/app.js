@@ -4,7 +4,9 @@
 // ─── Configuração Supabase (Frontend) ──────────────────────────────────────
 const SUPABASE_URL = 'https://oppuxdchoifqbhcyctzn.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_h8BlFlakeHSoks6e_w46GA_Q7S5KBup';
-const API_BASE = ''; // Em produção é relativo ao domínio Vercel
+// Detecta se estamos rodando local ou em produção
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE = isLocal ? 'http://localhost:3000' : '';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -62,27 +64,40 @@ async function checkOnboardingStatus() {
 }
 
 // ─── API Helper ─────────────────────────────────────────────────────────────
-async function apiFetch(path, options = {}) {
+async function apiFetch(path, options = {}, retries = 2) {
     const { data: { session } } = await sb.auth.getSession();
     const currentToken = session ? session.access_token : authToken;
 
-    const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentToken}`,
-            ...options.headers,
-        },
-    });
+    // Garante que o path comece com /
+    const urlPath = path.startsWith('/') ? path : `/${path}`;
+    const url = `${API_BASE}${urlPath}`;
 
-    // Tratamento robusto para não quebrar JSON em caso de erro no servidor (500 HTML)
-    const text = await res.text();
     try {
-        const data = JSON.parse(text);
-        if (!res.ok) throw new Error(data.error || 'Erro na API');
-        return data;
+        const res = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentToken}`,
+                ...options.headers,
+            },
+        });
+
+        const text = await res.text();
+        try {
+            const data = JSON.parse(text);
+            if (!res.ok) throw new Error(data.error || `Erro HTTP ${res.status}`);
+            return data;
+        } catch (e) {
+            if (res.ok) return { success: true, message: 'Operação concluída' };
+            throw new Error(e.message || 'Resposta inválida do servidor');
+        }
     } catch (e) {
-        throw new Error(e.message.includes('Erro na API') ? e.message : 'Falha na conexão com o servidor');
+        if (retries > 0) {
+            console.warn(`Tentativa de conexão falhou. Retentando... (${retries})`);
+            await new Promise(r => setTimeout(r, 1000));
+            return apiFetch(path, options, retries - 1);
+        }
+        throw new Error('Sem conexão com o servidor. Verifique sua internet ou se o backend está rodando.');
     }
 }
 

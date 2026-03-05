@@ -212,10 +212,9 @@ Lesões/Restrições: ${profile.injuries || 'Nenhuma informada'}
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-//  ROTA 3 — GET /api/workout/today
-//  Gera o treino do dia baseado no perfil do aluno via IA.
+//  ROTA 3/4 — /api/workout (GET: Gera | POST: Registra)
 // ══════════════════════════════════════════════════════════════════════════
-app.get('/api/workout/today', requireAuth, requireSubscription, async (req, res) => {
+app.get('/api/workout', requireAuth, requireSubscription, async (req, res) => {
     try {
         const { data: profile } = await supabase
             .from('profiles')
@@ -263,7 +262,7 @@ REGRAS CRÍTICAS DE FORMATAÇÃO:
 //  ROTA 4 — POST /api/workout/log
 //  Registra o treino concluído e atualiza o Discipline Score.
 // ══════════════════════════════════════════════════════════════════════════
-app.post('/api/workout/log', requireAuth, requireSubscription, async (req, res) => {
+app.post('/api/workout', requireAuth, requireSubscription, async (req, res) => {
     const { workout_name, perceived_effort, exercises_summary } = req.body;
     console.log('[workout/log] Iniciando registro para:', req.user.id);
 

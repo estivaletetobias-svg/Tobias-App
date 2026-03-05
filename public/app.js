@@ -144,7 +144,7 @@ window.startWithAI = async function () {
 
 // ─── Treino do Dia ─────────────────────────────────────────────────────────
 async function loadTodayWorkout(hasCompletedToday = false) {
-    const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
+    const result = await apiFetch('/api/workout').catch(() => ({ success: false }));
     const titleEl = document.getElementById('workout-title');
     const startBtn = document.getElementById('start-session-btn');
 
@@ -358,7 +358,7 @@ function injectStartSessionButton(msgEl) {
                 window.todayExercises = parsed;
             } else {
                 // Fallback: gerar novo treino via API
-                const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
+                const result = await apiFetch('/api/workout').catch(() => ({ success: false }));
                 if (!result.success || !result.data.exercises?.length) throw new Error(result.error || 'sem dados');
                 window.todayExercises = result.data.exercises;
             }
@@ -558,7 +558,7 @@ function initEventListeners() {
         const oldText = btn.textContent;
         btn.textContent = 'Carregando...';
 
-        const result = await apiFetch('/api/workout/today').catch(() => ({ success: false }));
+        const result = await apiFetch('/api/workout').catch(() => ({ success: false }));
 
         btn.textContent = oldText; // Restore
 
@@ -821,7 +821,7 @@ async function finishWorkoutSession() {
 
     // 2. Registrar no banco com todos os dados
     try {
-        const result = await apiFetch('/api/workout/log', {
+        const result = await apiFetch('/api/workout', {
             method: 'POST',
             body: JSON.stringify({
                 workout_name: workoutName,
@@ -920,7 +920,7 @@ async function initDashboard() {
     }
 
     // Atualizar Preview de Treino no Dashboard
-    const workout = await apiFetch('/api/workout/today');
+    const workout = await apiFetch('/api/workout');
     if (workout.success) {
         const w = workout.data;
         document.getElementById('workout-title').textContent = w.workout_name || 'Performance';

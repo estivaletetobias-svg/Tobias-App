@@ -148,13 +148,15 @@ async function updateExerciseDisplay() {
     const isSkipped = skippedIndexes.includes(window.currentExIndex);
     document.querySelector('.exercise-count').textContent =
         `Exercício ${window.currentExIndex + 1} de ${total}${isSkipped ? ' ⏩ pulado' : ''}`;
+
     document.getElementById('ex-name').textContent = ex.name || 'Exercício';
     document.getElementById('ex-desc').textContent = ex.cues || '';
 
-    const stats = document.querySelectorAll('.stat-item .value');
-    if (stats[0]) stats[0].textContent = ex.sets || '--';
-    if (stats[1]) stats[1].textContent = ex.reps || '--';
-    if (stats[2]) stats[2].textContent = ex.rest_sec ? `${ex.rest_sec}s` : '--';
+    // Stats Detalhados (Editáveis)
+    document.getElementById('stat-sets').textContent = ex.sets || '3';
+    document.getElementById('stat-reps').textContent = ex.reps || '10-12';
+    document.getElementById('stat-weight').textContent = ex.weight || '0kg';
+    document.getElementById('stat-rest').textContent = ex.rest_sec ? `${ex.rest_sec}s` : '60s';
 
     // Preview do próximo
     const nextEx = exs[window.currentExIndex + 1];

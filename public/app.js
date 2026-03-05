@@ -4,9 +4,9 @@
 // ─── Configuração Supabase (Frontend) ──────────────────────────────────────
 const SUPABASE_URL = 'https://oppuxdchoifqbhcyctzn.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_h8BlFlakeHSoks6e_w46GA_Q7S5KBup';
-// Detecta se estamos rodando local ou em produção
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE = isLocal ? 'http://localhost:3000' : '';
+// Detecta dinamicamente a base da API baseada na URL atual
+const API_BASE = window.location.origin;
+
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -97,7 +97,7 @@ async function apiFetch(path, options = {}, retries = 2) {
             await new Promise(r => setTimeout(r, 1000));
             return apiFetch(path, options, retries - 1);
         }
-        throw new Error('Sem conexão com o servidor. Verifique sua internet ou se o backend está rodando.');
+        throw new Error(`Conexão falhou: ${e.message}`);
     }
 }
 

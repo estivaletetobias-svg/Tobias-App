@@ -38,9 +38,14 @@ Retorne APENAS um JSON válido com este formato exato:
   "duration_min": 60,
   "focus": "foco muscular",
   "exercises": [
-    { "name": "nome", "sets": 4, "reps": "10-12", "rest_sec": 60, "cues": "dica técnica" }
+    { "name": "Supino Reto", "sets": 4, "reps": "10-12", "rest_sec": 60, "cues": "dica técnica" }
   ]
-}`;
+}
+
+REGRAS CRÍTICAS DE FORMATAÇÃO:
+1. Retorne APENAS o JSON. Sem textos soltos antes ou depois.
+2. A lista "exercises" DEVE conter APENAS exercícios reais e acionáveis.
+3. É ESTRITAMENTE PROIBIDO colocar "Grupos Musculares" ou "Títulos/Cabeçalhos" dentro do array "exercises" (exemplo PROIBIDO: { name: "Ombros e Braços:", sets: 0... }).`;
 
             const r = await OAI('/chat/completions', {
                 method: 'POST',

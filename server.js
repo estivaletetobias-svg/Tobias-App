@@ -189,10 +189,13 @@ Retorne um JSON com o formato:
   "duration_min": 60,
   "focus": "Membros superiores",
   "exercises": [
-    { "name": "Nome", "sets": 4, "reps": "10-12", "rest_sec": 60, "cues": "Dica técnica" }
+    { "name": "Supino Reto", "sets": 4, "reps": "10-12", "rest_sec": 60, "cues": "Dica técnica", "weight": "10kg" }
   ]
 }
-Retorne APENAS o JSON, sem explicações.
+REGRAS CRÍTICAS DE FORMATAÇÃO:
+1. Retorne APENAS o JSON. Sem textos antes ou depois.
+2. A lista "exercises" DEVE conter APENAS exercícios reais (ex: "Rosca Direta", "Agachamento"). 
+3. É ESTRITAMENTE PROIBIDO colocar "Grupos Musculares" ou "Títulos/Cabeçalhos" dentro do array "exercises" (exemplo PROIBIDO: { name: "Ombros e Braços:", sets: 0... }).
     `.trim();
 
         const completion = await openai.chat.completions.create({

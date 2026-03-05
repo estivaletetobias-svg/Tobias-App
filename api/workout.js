@@ -81,20 +81,24 @@ REGRAS CRÍTICAS DE FORMATAÇÃO:
                 ? `${workout_name || 'Treino do Dia'} | ${exercises_summary}`
                 : (workout_name || 'Treino do Dia');
 
-            await supabase.from('workout_logs').insert({
+            const { error: insertErr } = await supabase.from('workout_logs').insert({
                 user_id: user.id,
                 workout_name: richName,
                 perceived_effort
-                // completed_at é auto-preenchido pelo Supabase
             });
 
-            const { data: logs } = await supabase
+            if (insertErr) console.error('Insert workout log erro:', insertErr);
+
+            const { data: logs, error: selectErr } = await supabase
                 .from('workout_logs')
                 .select('id')
                 .eq('user_id', user.id)
-                .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+                .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
-            const newScore = Math.min(100, Math.round(((logs?.length || 0) / 30) * 100));
+            if (selectErr) console.error('Select logs erro:', selectErr);
+
+            const totalLogs = logs ? logs.length : 0;
+            const newScore = Math.min(100, Math.round((totalLogs / 30) * 100));
             await supabase.from('profiles').update({ discipline_score: newScore }).eq('id', user.id);
 
             return res.status(200).json(ok({ discipline_score: newScore, message: 'Treino registrado!' }));

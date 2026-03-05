@@ -151,6 +151,7 @@ async function loadTodayWorkout(hasCompletedToday = false) {
     // Armazenar exercícios para a sessão
     window.todayExercises = w.exercises || [];
     window.currentExIndex = 0;
+    window.currentSetIndex = 1;
     updateExerciseDisplay();
 }
 
@@ -183,8 +184,8 @@ async function updateExerciseDisplay() {
         document.getElementById('ex-name').textContent = ex.name || 'Exercício';
         document.getElementById('ex-desc').textContent = ex.cues || '';
 
-        // Stats Detalhados (Editáveis)
-        document.getElementById('stat-sets').textContent = ex.sets || '3';
+        // Stats Detalhados (Editáveis) - Mostra qual série estou fazendo
+        document.getElementById('stat-sets').textContent = `${window.currentSetIndex || 1}/${ex.sets || '3'}`;
         document.getElementById('stat-reps').textContent = ex.reps || '10-12';
         document.getElementById('stat-weight').textContent = ex.weight || '0kg';
         document.getElementById('stat-rest').textContent = ex.rest_sec ? `${ex.rest_sec}s` : '60s';
@@ -216,12 +217,19 @@ async function updateExerciseDisplay() {
         // Botoão Próximo vs Concluir
         const nextBtn = document.getElementById('next-ex');
         if (nextBtn) {
-            const allDone = exs.every((_, i) => !skippedIndexes.includes(i) || i === window.currentExIndex);
-            const isLast = window.currentExIndex === total - 1;
-            if (isLast && skippedIndexes.filter(i => i !== window.currentExIndex).length === 0) {
-                nextBtn.textContent = 'Concluir Treino ✓';
+            const totalSets = parseInt(ex.sets) || 1;
+            const currentSet = window.currentSetIndex || 1;
+
+            const isLastEx = window.currentExIndex === total - 1;
+            const noSkippedLeft = skippedIndexes.filter(i => i !== window.currentExIndex).length === 0;
+
+            if (currentSet < totalSets) {
+                // Modificado para continuar na mesma série e mostrar o check
+                nextBtn.innerHTML = `Série ${currentSet}/${totalSets} <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else if (isLastEx && noSkippedLeft) {
+                nextBtn.innerHTML = 'Concluir Treino <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>';
             } else {
-                nextBtn.textContent = 'Próximo ✔';
+                nextBtn.innerHTML = 'Próximo <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:bottom;margin-left:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>';
             }
         }
 
@@ -557,26 +565,48 @@ function initEventListeners() {
     // Workout ― navegação e pular
     document.getElementById('next-ex')?.addEventListener('click', () => {
         const exs = window.todayExercises || [];
+        if (!exs.length) return;
+
+        const currentEx = exs[window.currentExIndex];
+        const totalSets = parseInt(currentEx.sets) || 1;
+
+        // Se ainda tem séries no exercício atual, apenas avançar a série
+        if ((window.currentSetIndex || 1) < totalSets) {
+            window.currentSetIndex++;
+            updateExerciseDisplay();
+            return;
+        }
+
         const skipped = window.skippedIndexes || [];
-        const isLast = window.currentExIndex === exs.length - 1;
+        const isLastEx = window.currentExIndex === exs.length - 1;
         const hasRemainingSkipped = skipped.filter(i => i !== window.currentExIndex).length > 0;
 
-        if (isLast && !hasRemainingSkipped) {
+        if (isLastEx && !hasRemainingSkipped) {
             // Concluir treino
             document.getElementById('workout-overlay').style.display = 'none';
             finishWorkoutSession();
             return;
         }
+
+        // Remover do skipped se estava pulado e agora foi feito
+        window.skippedIndexes = skipped.filter(i => i !== window.currentExIndex);
+
         if (window.currentExIndex < exs.length - 1) {
-            // Remover do skipped se estava pulado e agora foi feito
-            window.skippedIndexes = skipped.filter(i => i !== window.currentExIndex);
             window.currentExIndex++;
+            window.currentSetIndex = 1;
+            updateExerciseDisplay();
+        } else if (hasRemainingSkipped) {
+            // Volta para o primeiro exercício que foi pulado
+            window.currentExIndex = window.skippedIndexes[0];
+            window.currentSetIndex = 1;
             updateExerciseDisplay();
         }
     });
+
     document.getElementById('prev-ex')?.addEventListener('click', () => {
         if (window.currentExIndex > 0) {
             window.currentExIndex--;
+            window.currentSetIndex = 1;
             updateExerciseDisplay();
         }
     });
@@ -594,6 +624,7 @@ function initEventListeners() {
             // Já no último — ir para o primeiro pulado
             window.currentExIndex = window.skippedIndexes[0];
         }
+        window.currentSetIndex = 1;
         updateExerciseDisplay();
     });
 
@@ -741,9 +772,10 @@ window.sendMiniAI = async function () {
 // ─── Registrar Treino Concluído ─────────────────────────────────────────────
 // Ir para o primeiro exercício pulado
 window.goToSkipped = function () {
-    const skipped = window.skippedIndexes || [];
-    if (skipped.length > 0) {
-        window.currentExIndex = skipped[0];
+    const skippedIndexes = window.skippedIndexes || [];
+    if (skippedIndexes.length > 0) {
+        window.currentExIndex = skippedIndexes[0];
+        window.currentSetIndex = 1;
         updateExerciseDisplay();
     }
 };
